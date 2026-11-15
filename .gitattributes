@@ -1,0 +1,6 @@
+# One line ending everywhere: Windows checkouts keep LF, so skills, hooks and tests read the same
+# bytes on macOS, Linux and Windows (Git for Windows defaults to core.autocrlf=true).
+* text=auto eol=lf
+*.png binary
+*.mcpb binary
+*.tgz binary

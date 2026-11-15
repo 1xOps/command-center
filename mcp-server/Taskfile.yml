@@ -1,0 +1,39 @@
+# 1xOps Command Center MCP server. Included from the repo root as `mcp:` (run `task mcp:<name>`).
+# Each task states the business question it answers; the logic lives in scripts/*.mjs.
+version: '3'
+
+tasks:
+  verify:
+    desc: "CTO · 'Can an engineer use Command Center today?' Builds, runs every test, starts the server over stdio, validates the plugin; prints measured seconds and writes evidence."
+    cmds:
+      - npm ci --no-audit --no-fund
+      - node scripts/verify.mjs
+
+  ci-local:
+    desc: "CTO · CFO · 'Does it pass on Linux before we spend CI minutes?' Runs the Linux CI job (npm ci, all tests, audit, supply-chain gate) in a container on the pinned Wolfi base. Needs Docker."
+    cmds:
+      - sh scripts/ci-local.sh
+
+  act:
+    desc: "CTO · CFO · 'Does the real CI workflow pass on macOS before we spend minutes?' Runs mcp-server-tests.yml's macOS job on this Mac with act. -self-hosted runs the steps on this Mac, so no runner image and no third-party image is pulled (act accepts that flag only on the command line, not from a project .actrc)."
+    dir: '{{.ROOT_DIR}}'
+    cmds:
+      - act workflow_dispatch -P macos-latest=-self-hosted -W .github/workflows/mcp-server-tests.yml -j test --matrix os:macos-latest
+
+  supply-chain:
+    desc: "CSO · 'Can we accept what we ship?' Generates the SBOM with npm, checks every package against the signed register and every licence against the allowed list, writes docs/supply-chain/register.md."
+    cmds:
+      - node scripts/supply-chain.mjs {{.CLI_ARGS}}
+
+  release-rehearsal:
+    desc: "CTO · CFO · 'What exactly would we publish?' Packs the npm package and the Claude Desktop bundle locally, lists files and sizes, publishes nothing."
+    cmds:
+      - node scripts/release-rehearsal.mjs
+
+  image:
+    desc: "CISO · 'Can we isolate it?' Builds the Wolfi container image (non-root, sees only the mounted folder). Needs a running Docker daemon."
+    cmds:
+      - docker build -t command-center:{{.VERSION}} .
+    vars:
+      VERSION:
+        sh: node -p "require('./package.json').version"

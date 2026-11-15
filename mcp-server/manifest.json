@@ -1,0 +1,61 @@
+{
+  "manifest_version": "0.3",
+  "name": "command-center",
+  "display_name": "1xOps Command Center",
+  "version": "0.4.0",
+  "description": "Persistent terminal sessions, processes and text-file tools, limited to the folders you choose.",
+  "long_description": "Command Center lets Claude run commands in sessions that stay open (tests, builds, logs, REPLs, SSH) and read, search and edit text files, only inside the folders you pick when installing. Common dangerous commands (sudo, disk and system tools) are refused. Nothing is sent anywhere: no telemetry, no remote service.",
+  "author": {
+    "name": "1xOps (nnthanh101)",
+    "email": "nnthanh101@gmail.com",
+    "url": "https://github.com/1xOps"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1xOps/command-center-mcp"
+  },
+  "homepage": "https://github.com/1xOps/command-center-mcp/tree/develop/mcp-server",
+  "support": "https://github.com/1xOps/command-center-mcp/issues",
+  "icon": "icon.png",
+  "license": "Apache-2.0",
+  "privacy_policies": [
+    "https://github.com/1xOps/command-center-mcp/blob/develop/mcp-server/PRIVACY.md"
+  ],
+  "keywords": [
+    "terminal",
+    "shell",
+    "process",
+    "files",
+    "command-center"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/index.js",
+        "${user_config.allowed_directories}"
+      ]
+    }
+  },
+  "user_config": {
+    "allowed_directories": {
+      "type": "directory",
+      "title": "Folders Command Center may use",
+      "description": "Command Center can read, write and run commands only in these folders. Change them later in the extension settings.",
+      "multiple": true,
+      "required": true
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32"
+    ],
+    "runtimes": {
+      "node": ">=24"
+    }
+  },
+  "tools_generated": false
+}
