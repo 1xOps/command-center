@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 
 export function scratch(t, purpose) {
-  const dir = realpathSync(mkdtempSync(path.join(os.tmpdir(), `command-center-test-${purpose}-`)));
+  // .native resolves Windows 8.3 short names (RUNNER~1) the way the server's realpath does.
+  const dir = realpathSync.native(mkdtempSync(path.join(os.tmpdir(), `command-center-test-${purpose}-`)));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
 }

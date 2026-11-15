@@ -8,10 +8,14 @@ const MAX_SESSIONS = 50;
 const IDLE_MS = 400; // output is "settled" after this long without new bytes
 const IS_WINDOWS = process.platform === 'win32';
 
+const PS_EXIT = 'if (-not $?) { if ($LASTEXITCODE) { exit $LASTEXITCODE } else { exit 1 } }';
+
 /** How each shell is told to run one command line. */
 export function shellArgs(shell: string, command: string): string[] {
   const name = programName(shell);
-  if (name === 'powershell' || name === 'pwsh') return ['-NoLogo', '-NoProfile', '-Command', command];
+  // Windows PowerShell 5.1 ends -Command with exit code 1 for any failure, hiding a program's
+  // own code; this line after the command passes the real code on (pwsh 7 behaves the same way).
+  if (name === 'powershell' || name === 'pwsh') return ['-NoLogo', '-NoProfile', '-Command', `${command}\n${PS_EXIT}`];
   // With /s, cmd strips the first and last quote of the line, so the whole line is wrapped in
   // quotes (as Node does for shell: true) and arguments are passed verbatim.
   if (name === 'cmd') return ['/d', '/s', '/c', `"${command}"`];

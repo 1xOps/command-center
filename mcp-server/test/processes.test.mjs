@@ -84,7 +84,9 @@ test('an unknown pid gives a clear error', async () => {
 
 test('each shell gets its own way of running one command line', () => {
   assert.deepEqual(proc.shellArgs('/bin/zsh', 'ls'), ['-c', 'ls']);
-  assert.deepEqual(proc.shellArgs('powershell.exe', 'ls'), ['-NoLogo', '-NoProfile', '-Command', 'ls']);
+  const ps = proc.shellArgs('powershell.exe', 'ls');
+  assert.deepEqual(ps.slice(0, 3), ['-NoLogo', '-NoProfile', '-Command']);
+  assert.match(ps[3], /^ls\n.*exit \$LASTEXITCODE/, 'the command, then the line that keeps its exit code');
   assert.deepEqual(proc.shellArgs('C:\\Windows\\System32\\cmd.exe', 'dir'), ['/d', '/s', '/c', '"dir"']);
 });
 
