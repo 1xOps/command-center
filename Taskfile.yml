@@ -1,0 +1,26 @@
+# 1xOps Command Center. Each task names the business question it answers; the logic lives in
+# mcp-server/scripts. Git standard: develop is proved here before any push; GitHub Actions runs for main.
+version: '3'
+
+includes:
+  mcp:
+    taskfile: mcp-server/Taskfile.yml
+    dir: mcp-server
+
+tasks:
+  setup:
+    desc: "Owner · 'Are the git-standard checks on in this clone?' Turns on the standard hooks (secret scan before commit, message check, tests before push)."
+    cmds:
+      - git config core.hooksPath .githooks
+      - bash .githooks/pre-commit --self-test
+      - bash .githooks/commit-msg --self-test
+      - bash .githooks/pre-push --self-test
+
+  check:
+    desc: "CTO · 'Is develop ready for the owner to commit?' Runs every local gate: macOS job via act on this Mac, Linux job in Wolfi, supply chain."
+    cmds:
+      - task: mcp:verify
+      - task: mcp:act
+      - task: mcp:ci-local
+      - task: mcp:supply-chain
+        vars: { CLI_ARGS: --release }
