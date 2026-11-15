@@ -1,0 +1,124 @@
+name: MCP server · Release
+
+# One release = one tag `mcp-server-vX.Y.Z` on the commit whose mcp-server/package.json says
+# X.Y.Z. `build` proves it (tests on three platforms run in mcp-server-tests.yml; here the
+# suite runs again on the tagged commit) and packs the npm tarball and the Claude Desktop
+# bundle. `publish` waits for a named approver in the `release` GitHub environment (the HITL
+# gate), then publishes to npm with provenance (OIDC trusted publishing, no token), attaches
+# the .mcpb to a GitHub release and lists the version in the MCP Registry (OIDC).
+#
+# Rehearsal: run the workflow by hand with `rehearsal` ticked; it builds and packs, publishes
+# nothing (npm publish --dry-run, registry validate only, no GitHub release).
+#
+# One-time owner setup: create the npm org @1xops and publish once by hand; add the trusted
+# publisher on npmjs.com (repository 1xOps/command-center-mcp, workflow mcp-server-release.yml,
+# environment release); create the `release` environment with the owner as required reviewer.
+on:
+  push:
+    tags: ['mcp-server-v*']
+  workflow_dispatch:
+    inputs:
+      rehearsal:
+        description: 'Build and pack only; publish nothing'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-server-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MCP_PUBLISHER_VERSION: v1.8.9
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp-server
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mcp-server/package-lock.json
+      - id: version
+        name: Tag matches package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "mcp-server-v$VERSION" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version $VERSION"; exit 1
+          fi
+      - run: npm ci
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Supply-chain register signed by the owner
+        run: node scripts/supply-chain.mjs --release
+      - run: npm pack
+      - run: npm run build:mcpb
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: |
+            mcp-server/*.tgz
+            mcp-server/*.mcpb
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: build
+    # A real publish only ever comes from a version tag; a manual run may only rehearse.
+    if: startsWith(github.ref, 'refs/tags/mcp-server-v') || (github.event_name == 'workflow_dispatch' && inputs.rehearsal)
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write   # GitHub release and its .mcpb asset
+      id-token: write   # npm provenance and MCP Registry login (OIDC)
+    defaults:
+      run:
+        working-directory: mcp-server
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      REHEARSAL: ${{ github.event_name == 'workflow_dispatch' && inputs.rehearsal }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: mcp-server/release
+      - name: npm publish (provenance)
+        run: |
+          TGZ=$(ls release/*.tgz)
+          if [ "$REHEARSAL" = "true" ]; then npm publish "$TGZ" --dry-run --provenance --access public; exit 0; fi
+          if npm view "@1xops/command-center@$VERSION" version >/dev/null 2>&1; then echo "npm already has $VERSION"; exit 0; fi
+          npm publish "$TGZ" --provenance --access public
+      - name: GitHub release with the Claude Desktop bundle
+        if: env.REHEARSAL != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="mcp-server-v$VERSION"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Command Center $VERSION" --generate-notes --verify-tag
+          gh release upload "$TAG" release/command-center-$VERSION.mcpb --clobber
+      - name: MCP Registry
+        run: |
+          BASE="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+          ASSET="mcp-publisher_linux_amd64.tar.gz"
+          curl -fsSLO "$BASE/$ASSET"
+          curl -fsSL "$BASE/registry_${MCP_PUBLISHER_VERSION#v}_checksums.txt" | grep " $ASSET\$" | sha256sum -c -
+          tar xzf "$ASSET" mcp-publisher
+          ./mcp-publisher validate server.json
+          [ "$REHEARSAL" = "true" ] && exit 0
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish

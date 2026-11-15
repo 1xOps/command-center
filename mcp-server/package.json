@@ -1,0 +1,59 @@
+{
+  "name": "@1xops/command-center",
+  "version": "0.4.0",
+  "description": "1xOps Command Center: an MCP server for persistent terminal sessions, processes and text-file work, with one folder and command policy for Claude and OpenAI clients",
+  "mcpName": "io.github.1xOps/command-center",
+  "license": "Apache-2.0",
+  "author": "1xOps (nnthanh101) <nnthanh101@gmail.com> (https://github.com/1xOps)",
+  "homepage": "https://github.com/1xOps/command-center-mcp/tree/develop/mcp-server",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1xOps/command-center-mcp.git",
+    "directory": "mcp-server"
+  },
+  "bugs": "https://github.com/1xOps/command-center-mcp/issues",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "command-center": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "icon.png"
+  ],
+  "scripts": {
+    "build": "node scripts/clean.mjs && tsc -p tsconfig.json && node scripts/make-executable.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test --test-reporter=spec",
+    "test:coverage": "npm run build && node --test --experimental-test-coverage --test-coverage-include=dist/**",
+    "start": "node dist/index.js",
+    "verify": "node scripts/verify.mjs",
+    "supply-chain": "node scripts/supply-chain.mjs",
+    "release:rehearsal": "node scripts/release-rehearsal.mjs",
+    "prepack": "npm run build",
+    "build:mcpb": "npm run build && node scripts/build-mcpb.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "terminal",
+    "process",
+    "claude",
+    "codex"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}

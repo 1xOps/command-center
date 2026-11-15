@@ -1,0 +1,22 @@
+{
+  "name": "command-center",
+  "owner": {
+    "name": "1xOps (nnthanh101)",
+    "email": "nnthanh101@gmail.com"
+  },
+  "metadata": {
+    "description": "1xOps marketplace for Command Center",
+    "version": "0.4.0"
+  },
+  "plugins": [
+    {
+      "name": "command-center",
+      "source": "./plugins/command-center",
+      "description": "1xOps Command Center: persistent terminal sessions, processes and text-file tools under one folder and command policy, plus skills for using them well",
+      "author": {
+        "name": "1xOps (nnthanh101)",
+        "email": "nnthanh101@gmail.com"
+      }
+    }
+  ]
+}

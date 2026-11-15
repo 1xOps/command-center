@@ -1,0 +1,69 @@
+{
+  "policy": "Only official packages (Anthropic, the Model Context Protocol project, Node.js built-ins, OS tools, GitHub's own actions) or packages the owner approved with why, value and what-if. Packages a listed package depends on are covered by its approval and appear in the SBOM. Every shipped licence must be on the allowed list.",
+  "allowedLicences": [
+    "MIT",
+    "ISC",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD"
+  ],
+  "packages": {
+    "@modelcontextprotocol/sdk": {
+      "scope": "runtime",
+      "class": "official",
+      "owner": "Model Context Protocol project (official TypeScript SDK)",
+      "why": "Implements the MCP protocol and the stdio transport the server speaks.",
+      "value": "Protocol compliance with Claude Code, Claude Desktop and Codex without writing JSON-RPC by hand.",
+      "whatIf": "Without it the protocol layer would be ours to write, test and keep current with each MCP revision.",
+      "status": "approved",
+      "approvedBy": "owner (nnthanh101), in the Claude Code session",
+      "approvedOn": "2026-11-16"
+    },
+    "zod": {
+      "scope": "runtime",
+      "class": "official-peer",
+      "owner": "zod maintainers; required peer dependency of @modelcontextprotocol/sdk",
+      "why": "Tool input and output schemas; the SDK validates tool calls with it.",
+      "value": "Every tool argument is validated before the tool runs.",
+      "whatIf": "The SDK cannot register typed tools without a zod version it supports.",
+      "status": "approved",
+      "approvedBy": "owner (nnthanh101), in the Claude Code session",
+      "approvedOn": "2026-11-16"
+    },
+    "typescript": {
+      "scope": "dev",
+      "class": "big-vendor",
+      "owner": "Microsoft",
+      "why": "Type-checks and compiles src/ to dist/.",
+      "value": "Type errors fail the build instead of reaching users.",
+      "whatIf": "Plain JavaScript with no type gate.",
+      "status": "approved",
+      "approvedBy": "owner (nnthanh101), in the Claude Code session",
+      "approvedOn": "2026-11-16"
+    },
+    "@types/node": {
+      "scope": "dev",
+      "class": "community",
+      "owner": "DefinitelyTyped",
+      "why": "Type definitions for Node.js 24 built-ins, used only at build time.",
+      "value": "The compiler checks every node: API call.",
+      "whatIf": "TypeScript cannot type-check Node built-ins.",
+      "status": "approved",
+      "approvedBy": "owner (nnthanh101), in the Claude Code session",
+      "approvedOn": "2026-11-16"
+    }
+  },
+  "releaseTools": {
+    "@anthropic-ai/mcpb@2.1.2": {
+      "class": "official",
+      "owner": "Anthropic",
+      "why": "Packs the Claude Desktop bundle; run through npx at release time only, never installed in this project.",
+      "advisory": "npm audit reports 6 advisories (3 high) in its own dependencies (its private zod copy, prompt libraries); none ships in the bundle.",
+      "status": "approved",
+      "approvedBy": "owner (nnthanh101), in the Claude Code session",
+      "approvedOn": "2026-11-16",
+      "acceptedRisk": "Owner accepted the 3 high advisories in the tool's own dependencies: release-time only, run through npx in CI, nothing from it ships in the bundle."
+    }
+  }
+}

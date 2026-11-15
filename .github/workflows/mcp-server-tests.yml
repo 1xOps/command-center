@@ -1,0 +1,55 @@
+name: MCP server · Tests
+
+# Git standard: develop is checked locally (task mcp:act for macOS, task mcp:ci-local for Linux);
+# GitHub Actions runs on the release pull request to main, on main itself, and by hand, where the
+# Windows leg runs. All three OS legs block the merge to main (owner decision 2026-11-16).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-server-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: mcp-server
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mcp-server/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - name: Audit (fails on high or critical)
+        run: npm audit --audit-level=high
+      - name: Supply-chain gate (unregistered package or licence fails)
+        run: npm run supply-chain
+
+  plugin:
+    name: plugin manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # Claude Code's own validator (official Anthropic package), pinned to the version the owner runs.
+      - run: npx -y @anthropic-ai/claude-code@2.1.325 plugin validate .
+      - run: npx -y @anthropic-ai/claude-code@2.1.325 plugin validate plugins/command-center
