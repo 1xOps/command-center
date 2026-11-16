@@ -2,7 +2,7 @@
 
 ## Recommended: the bundle
 
-1. Download `command-center-0.4.0.mcpb` from the GitHub release of `1xOps/command-center`.
+1. Download `command-center-0.4.1.mcpb` from the GitHub release of `1xOps/command-center`.
 2. Open it (double-click, or Settings → Extensions → Install extension).
 3. Pick the folders Command Center may use. Claude Desktop passes each one as a launch argument.
 4. In a new chat, ask for `get_config`: it lists the folders you picked.
@@ -21,7 +21,7 @@ The bundle carries its own copy of the server, so no `npx` or registry access is
   "mcpServers": {
     "command-center": {
       "command": "npx",
-      "args": ["-y", "@1xops/command-center@0.4.0", "/Users/me/work"]
+      "args": ["-y", "@1xops/command-center@0.4.1", "/Users/me/work"]
     }
   }
 }

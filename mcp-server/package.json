@@ -1,6 +1,6 @@
 {
   "name": "@1xops/command-center",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "1xOps Command Center: an MCP server for persistent terminal sessions, processes and text-file work, with one folder and command policy for Claude and OpenAI clients",
   "mcpName": "io.github.1xOps/command-center",
   "license": "Apache-2.0",

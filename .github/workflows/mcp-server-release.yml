@@ -1,6 +1,6 @@
 name: MCP server · Release
 
-# One release = one tag `mcp-server-vX.Y.Z` on the commit whose mcp-server/package.json says
+# One release = one tag `command-center-vX.Y.Z` on the commit whose mcp-server/package.json says
 # X.Y.Z. `build` proves it (tests on three platforms run in mcp-server-tests.yml; here the
 # suite runs again on the tagged commit) and packs the npm tarball and the Claude Desktop
 # bundle. `publish` waits for a named approver in the `release` GitHub environment (the HITL
@@ -15,7 +15,7 @@ name: MCP server · Release
 # environment release); create the `release` environment with the owner as required reviewer.
 on:
   push:
-    tags: ['mcp-server-v*']
+    tags: ['command-center-v*']
   workflow_dispatch:
     inputs:
       rehearsal:
@@ -53,7 +53,7 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "mcp-server-v$VERSION" ]; then
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "command-center-v$VERSION" ]; then
             echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version $VERSION"; exit 1
           fi
       - run: npm ci
@@ -75,7 +75,7 @@ jobs:
   publish:
     needs: build
     # A real publish only ever comes from a version tag; a manual run may only rehearse.
-    if: startsWith(github.ref, 'refs/tags/mcp-server-v') || (github.event_name == 'workflow_dispatch' && inputs.rehearsal)
+    if: startsWith(github.ref, 'refs/tags/command-center-v') || (github.event_name == 'workflow_dispatch' && inputs.rehearsal)
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -109,7 +109,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="mcp-server-v$VERSION"
+          TAG="command-center-v$VERSION"
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Command Center $VERSION" --generate-notes --verify-tag
           gh release upload "$TAG" release/command-center-$VERSION.mcpb --clobber
       - name: MCP Registry
