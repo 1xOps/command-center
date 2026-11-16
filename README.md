@@ -18,7 +18,7 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 | 🧪 **Fix a failing test suite** | Run the tests, read the failures, edit, run again — in the same shell | The environment stays set up; the engineer reviews one diff |
 | 🚨 **Watch logs during an incident** | Start a tail, read new output on demand, stop it with `force_terminate` | A second pair of eyes on live output; nothing left running afterwards |
 | 📊 **Check data in a REPL** | `python3 -i` or `node -i` keeps the data loaded across turns | Answers come from the data, not from a script re-run each time |
-| 🔐 **Diagnose a server over SSH** | One `ssh` session kept open across turns | Faster remote triage. The blocklist checks the command that opens the session, not what is typed remotely — use a least-privilege account |
+| 🔐 **Diagnose a server over SSH** | One `ssh` session kept open across turns | Faster remote triage. The blocklist checks the remote command and each typed line; the remote account's permissions are still the real limit |
 | 🏢 **One approved setup for the team** | Commit a pinned `.mcp.json` | Every seat runs the same reviewed version |
 
 ## 🧩 Clients and platforms
@@ -98,7 +98,7 @@ Command Center runs commands with **your** permissions and trusts the AI client 
 | Person-only settings | `set_config_value` refuses `allowedDirectories`, `blockedCommands`, `defaultShell`; file tools refuse the config folder | No |
 | Container | Non-root, only the mounted folder visible | **Yes**, for the host filesystem |
 
-**Limits:** a program started in a session can reach any path and network you can, and could edit the config file (it applies at the next start). The command check reads command lines, not scripts, REPL input or remote SSH input. Each session keeps its last 1 MiB of output in memory.
+**Limits:** a program started in a session can reach any path and network you can, and could edit the config file (it applies at the next start). The command check reads command lines (including lines typed into a shell or `ssh` session), not scripts or REPL input. Each session keeps its last 1 MiB of output in memory.
 
 **Privacy:** no telemetry, analytics, update checks or remote calls. See [SECURITY.md](mcp-server/SECURITY.md) · [PRIVACY.md](mcp-server/PRIVACY.md).
 </details>

@@ -124,3 +124,15 @@ test('move_file moves a symlink itself, not its target, and allows a case-only r
   await files.moveFile(path.join(dir, 'Readme.md'), path.join(dir, 'README.md'));
   assert.ok(existsSync(path.join(dir, 'README.md')));
 });
+
+test('move_file expands ~ like every other file tool', async (t) => {
+  const home = scratch(t, 'home');
+  const saved = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE };
+  process.env.HOME = home;
+  process.env.USERPROFILE = home;
+  t.after(() => Object.assign(process.env, saved));
+  writeFileSync(path.join(home, 'a.txt'), 'x');
+  const moved = await files.moveFile('~/a.txt', '~/b.txt');
+  assert.equal(moved.to, path.join(home, 'b.txt'));
+  assert.ok(existsSync(path.join(home, 'b.txt')) && !existsSync(path.join(home, 'a.txt')));
+});

@@ -76,11 +76,17 @@ export const SHELLS = new Set([
   'sh', 'bash', 'zsh', 'dash', 'ksh', 'fish', 'csh', 'tcsh', 'nu', 'xonsh', 'script',
   'powershell', 'pwsh', 'cmd',
 ]);
+/**
+ * Remote shells: what is typed into them is a command line on another machine, so it is
+ * checked like shell input. The remote account's permissions remain the real limit there.
+ * REPLs (python -i, node -i) are not here: their input is code, not command lines.
+ */
+export const REMOTE_SHELLS = new Set(['ssh', 'mosh']);
 // Words that run a later word as the command: POSIX wrappers, shells given a command, and
 // their Windows equivalents. After one of these, every later word is checked.
 const PREFIX_WORDS = new Set([
   'exec', 'command', 'builtin', 'env', 'nohup', 'time', 'nice', 'xargs', 'stdbuf', 'timeout', 'doas',
-  ...SHELLS, 'start', 'start-process', 'call',
+  ...SHELLS, ...REMOTE_SHELLS, 'start', 'start-process', 'call',
 ]);
 // Shell grammar words that may precede the command in a simple command.
 const KEYWORDS = new Set(['if', 'then', 'else', 'elif', 'do', 'while', 'until', '!', '{', '}', 'fi', 'done', 'case', 'esac', 'in', 'function']);

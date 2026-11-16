@@ -18,7 +18,7 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 | 🧪 **Fix failing tests** — run, read failures, edit, re-run in one shell | Environment stays set up; one diff to review |
 | 🚨 **Watch logs in an incident** — tail, read on demand, stop when done | Live second pair of eyes; nothing left running |
 | 📊 **Check data in a REPL** — `python3 -i` / `node -i` keeps data loaded | Answers from the data itself |
-| 🔐 **Diagnose over SSH** — one session kept open | Faster triage; the remote account's permissions are the limit there |
+| 🔐 **Diagnose over SSH** — one session kept open | Faster triage; typed lines are checked, and the remote account's permissions are the real limit |
 | 🏢 **One team setup** — commit a pinned `.mcp.json` | Every seat runs the same reviewed version |
 
 ## 🚀 Install (pinned)
@@ -87,7 +87,7 @@ For PDF, Word, Excel and PowerPoint, use Anthropic's document skills (`pdf`, `do
 <summary><b>Limits you should know</b></summary>
 
 - Guardrails against mistakes, **not a sandbox**: a program started in a session can reach any path and network you can, and could edit the config file (applies at next start).
-- The command check reads command lines — not scripts, REPL input, or what is typed over SSH.
+- The command check reads command lines, including lines typed into a shell or `ssh` session — not scripts or REPL input.
 - Each session keeps its last 1 MiB of output in memory; a secret a command prints is visible to the client.
 - For untrusted work, use the container. No telemetry or remote calls. See [SECURITY.md](SECURITY.md) · [PRIVACY.md](PRIVACY.md).
 </details>
