@@ -6,7 +6,7 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 
 | | |
 |---|---|
-| 🧩 **Clients** | Claude Code (plugin or server only), Claude Desktop (`.mcpb`), OpenAI Codex CLI, VS Code |
+| 🧩 **Clients** | Claude Desktop (`.mcpb`), Claude Code (plugin or server only), OpenAI Codex CLI, VS Code |
 | 💻 **Platforms** | macOS, Linux, Windows (tests pass on all three in CI: [run 43794268200](https://github.com/1xOps/command-center/actions/runs/43794268200)) |
 | ⚙️ **Requires** | Node.js 24+ (Claude Desktop installs it from the `.mcpb`) |
 | 📦 **Package** | `@1xops/command-center` · MCP Registry `io.github.1xOps/command-center` · 2 runtime deps (MCP SDK, zod) · Apache-2.0 |
@@ -23,7 +23,9 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 
 ## 🚀 Install (pinned)
 
-Replace `/path/to/project` with the folders the agent may use; they become `allowedDirectories`.
+**Claude Desktop (macOS, Windows)** — open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders to allow.
+
+For the other clients, replace `/path/to/project` with the folders the agent may use; they become `allowedDirectories`.
 
 ```bash
 # Claude Code: plugin (server + 6 skills) — passes no folder; see Settings
@@ -38,14 +40,12 @@ codex mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/proj
 ```
 
 <details>
-<summary><b>VS Code, Claude Desktop, team setup, container</b></summary>
+<summary><b>VS Code, team setup, container</b></summary>
 
 **VS Code** — `.vscode/mcp.json`:
 ```json
 { "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "${workspaceFolder}"] } } }
 ```
-
-**Claude Desktop (macOS, Windows)** — open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders to allow.
 
 **Team setup** — commit `.mcp.json` (Codex: same args under `[mcp_servers.command-center]` in `~/.codex/config.toml`):
 ```json

@@ -6,6 +6,9 @@
 
 A local MCP server: shell sessions that stay open between turns, plus text-file tools, under one folder limit and one command blocklist that only a person can change. It runs on your machine with your permissions and sends nothing anywhere.
 
+**Claude Desktop (macOS, Windows):** open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases) and pick the folders it may use.
+
+**Claude Code** (the plugin passes no folder; set the limit as in [Install for each client](#-clients-and-platforms)):
 ```
 /plugin marketplace add 1xOps/command-center
 /plugin install command-center@command-center
@@ -29,7 +32,7 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 | You need | Why it matters | With Command Center | Without it |
 |---|---|---|---|
 | 🖥️ **Shell and file tools in Claude Desktop chat** | Not everyone on the team works in a terminal | One installer file; the person picks the allowed folders | Use the app's Code tab (Claude Code) or Cowork, which work in folders the person picks, under their own settings |
-| 📏 **One rule set across AI tools** | Security reviews one policy, not one per tool | The same folder limit and command blocklist for this server in Claude Code, Claude Desktop, Codex and VS Code; its file and settings tools cannot loosen them, but the commands it runs are not sandboxed | Each tool has its own permission settings to set and review (Claude Code managed settings, Codex requirements, VS Code approvals) |
+| 📏 **One rule set across AI tools** | Security reviews one policy, not one per tool | The same folder limit and command blocklist for this server in Claude Desktop, Claude Code, Codex and VS Code; its file and settings tools cannot loosen them, but the commands it runs are not sandboxed | Each tool has its own permission settings to set and review (Claude Code managed settings, Codex requirements, VS Code approvals) |
 | 🔁 **Sessions that stay open** | SSH triage, REPLs and log tails need state between turns | Sessions stay open and the agent types into them; lines typed into a shell or SSH session are checked against the blocklist (REPL input is not). Plain pipes: no password prompts or full-screen programs | Codex and VS Code can type into a running terminal; Claude Code runs each command in its own process |
 | 🧾 **A supply chain you can audit** | Every tool on a seat needs an owner and a trail | Signed dependency register, npm provenance, owner approval before each release, no telemetry | Any other server you add needs the same review: provenance, a dependency list, an owner |
 
@@ -40,9 +43,9 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 
 | Client | Install | macOS | Linux | Windows |
 |---|---|:-:|:-:|:-:|
+| Claude Desktop | `.mcpb` from [Releases](https://github.com/1xOps/command-center/releases) | ✓ | | ✓ ¹ |
 | Claude Code — plugin (server + 6 skills) | `/plugin install` above | ✓ | ✓ | ✓ ¹ |
 | Claude Code — server only | `claude mcp add` | ✓ | ✓ | ✓ ¹ |
-| Claude Desktop | `.mcpb` from [Releases](https://github.com/1xOps/command-center/releases) | ✓ | | ✓ ¹ |
 | OpenAI Codex CLI | `codex mcp add` | ✓ | ✓ | ✓ ¹ |
 | VS Code (agent mode) | `.vscode/mcp.json` | ✓ | ✓ | ✓ ¹ |
 
@@ -52,7 +55,9 @@ Node.js 24 or later (Claude Desktop installs it from the `.mcpb`). 20 tools — 
 <details>
 <summary><b>⚙️ Install for each client (pinned to 0.4.2)</b></summary>
 
-Replace `/path/to/project` with the folders the agent may use; they become `allowedDirectories` for that session.
+**Claude Desktop** — open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders Command Center may use.
+
+For the other clients, replace `/path/to/project` with the folders the agent may use; they become `allowedDirectories` for that session.
 
 > **The plugin passes no folder.** With no folder and an empty `allowedDirectories` there is **no folder limit**. Set `allowedDirectories` in `~/.command-center/config.json`, or use a server-only install with a folder.
 
@@ -68,8 +73,6 @@ codex mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/proj
 ```json
 { "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "${workspaceFolder}"] } } }
 ```
-
-**Claude Desktop** — open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders Command Center may use.
 </details>
 
 <details>
