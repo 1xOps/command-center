@@ -93,7 +93,7 @@ args = ["-y", "@1xops/command-center@0.4.2", "/path/to/project"]
 ```
 
 **3. Set the folder limit for plugin installs.** The plugin passes no folder, so give each seat [`templates/config.json`](templates/config.json) at `~/.command-center/config.json` (Windows: `%USERPROFILE%\.command-center\config.json`; `COMMAND_CENTER_CONFIG_DIR` moves it). Set `allowedDirectories` to the approved folders.
-- If you leave `blockedCommands` out, the built-in list applies. If you list it, your list replaces the built-in one.
+- If you leave `blockedCommands` out, the built-in list applies. If you list it, your list replaces the built-in one. The first `set_config_value` call writes the current built-in list into the file, and from then on that copy applies. To pick up a newer release's list, delete `blockedCommands` from the file.
 - Folders passed at launch (step 2) take precedence over the file.
 
 **4. Check a seat.** `npx -y @1xops/command-center@0.4.2 --version` prints `0.4.2`. Ask the agent to read a file outside the approved folders. It is refused with a message that names the setting:
