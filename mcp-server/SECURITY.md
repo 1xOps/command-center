@@ -27,4 +27,4 @@ The server ships two packages: the official MCP SDK and zod (its required peer),
 
 ## Reporting a vulnerability
 
-Use GitHub private vulnerability reporting (repository Security tab, "Report a vulnerability") at https://github.com/1xOps/command-center-mcp, or email the owner, nnthanh101 (nnthanh101@gmail.com). Please include steps to reproduce. We acknowledge reports, assess impact and publish fixed versions with an advisory.
+Use GitHub private vulnerability reporting (repository Security tab, "Report a vulnerability") at https://github.com/1xOps/command-center, or email the owner, nnthanh101 (nnthanh101@gmail.com). Please include steps to reproduce. We acknowledge reports, assess impact and publish fixed versions with an advisory.

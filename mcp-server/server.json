@@ -4,7 +4,7 @@
   "title": "1xOps Command Center",
   "description": "Persistent terminal sessions, processes and text-file tools under one folder and command policy",
   "repository": {
-    "url": "https://github.com/1xOps/command-center-mcp",
+    "url": "https://github.com/1xOps/command-center",
     "source": "github",
     "subfolder": "mcp-server"
   },

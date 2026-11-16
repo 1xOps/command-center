@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/1xOps/command-center-mcp"
+    "url": "https://github.com/1xOps/command-center"
   },
-  "homepage": "https://github.com/1xOps/command-center-mcp/tree/develop/mcp-server",
-  "support": "https://github.com/1xOps/command-center-mcp/issues",
+  "homepage": "https://github.com/1xOps/command-center/tree/develop/mcp-server",
+  "support": "https://github.com/1xOps/command-center/issues",
   "icon": "icon.png",
   "license": "Apache-2.0",
   "privacy_policies": [
-    "https://github.com/1xOps/command-center-mcp/blob/develop/mcp-server/PRIVACY.md"
+    "https://github.com/1xOps/command-center/blob/develop/mcp-server/PRIVACY.md"
   ],
   "keywords": [
     "terminal",
