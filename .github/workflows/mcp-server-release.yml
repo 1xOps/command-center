@@ -99,7 +99,8 @@ jobs:
           path: mcp-server/release
       - name: npm publish (provenance)
         run: |
-          TGZ=$(ls release/*.tgz)
+          # ./ prefix: without it npm parses release/x.tgz as GitHub shorthand owner/repo
+          TGZ=$(ls ./release/*.tgz)
           if [ "$REHEARSAL" = "true" ]; then npm publish "$TGZ" --dry-run --provenance --access public; exit 0; fi
           if npm view "@1xops/command-center@$VERSION" version >/dev/null 2>&1; then echo "npm already has $VERSION"; exit 0; fi
           npm publish "$TGZ" --provenance --access public
