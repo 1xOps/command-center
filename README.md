@@ -11,17 +11,9 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 /plugin install command-center@command-center
 ```
 
-## 👥 Who it is for
-
-| You are | You get |
-|---|---|
-| **CTO** | One pinned, Apache-2.0 tool for every seat, with 2 runtime dependencies (MCP SDK, zod) |
-| **Platform / DevOps engineer** | Agents that run builds, tests, log tails, REPLs and SSH in sessions that keep their state |
-| **Security / CSO** | Folder limits and a command blocklist the agent cannot change through its tools; no telemetry; a container when you need a real boundary |
-
 ## 💼 What teams use it for
 
-| Scenario | How it works | Business value |
+| Scenario | How it works | Why it helps |
 |---|---|---|
 | 🧪 **Fix a failing test suite** | Run the tests, read the failures, edit, run again — in the same shell | The environment stays set up; the engineer reviews one diff |
 | 🚨 **Watch logs during an incident** | Start a tail, read new output on demand, stop it with `force_terminate` | A second pair of eyes on live output; nothing left running afterwards |

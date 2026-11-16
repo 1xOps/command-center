@@ -13,7 +13,7 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 
 ## 💼 What teams use it for
 
-| Scenario | Business value |
+| Scenario | Why it helps |
 |---|---|
 | 🧪 **Fix failing tests** — run, read failures, edit, re-run in one shell | Environment stays set up; one diff to review |
 | 🚨 **Watch logs in an incident** — tail, read on demand, stop when done | Live second pair of eyes; nothing left running |
