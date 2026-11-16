@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "command-center": {
+      "command": "npx",
+      "args": ["-y", "@1xops/command-center@0.4.2", "."]
+    }
+  }
+}

@@ -52,6 +52,7 @@ codex mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/proj
 { "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "."] } } }
 ```
 Provenance of a build: `npm view @1xops/command-center@0.4.2 dist.attestations`.
+Step-by-step pinned rollout, the team `config.json` and the refusal check: [Enterprise install](https://github.com/1xOps/command-center#readme) and [`templates/`](https://github.com/1xOps/command-center/tree/develop/templates).
 
 **Container** — from a repo checkout; sees only the mounted folder:
 ```bash

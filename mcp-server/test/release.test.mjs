@@ -20,3 +20,15 @@ test('the plugin pins the server version; never @latest', () => {
   const args = read('../../plugins/command-center/.mcp.json').mcpServers['command-center'].args;
   assert.ok(args.includes(`${name}@${version}`), args.join(' '));
 });
+
+test('every install line and team template pins the package version', () => {
+  // Any tag after the package name counts (catches @latest); the .mcpb file name and the container tag too.
+  const pinned = new RegExp(`${name.replace('/', '\\/')}@([^"\\s\`]+)|command-center[-:](\\d+\\.\\d+\\.\\d+)`, 'g');
+  for (const rel of ['../../README.md', '../README.md', '../../templates/.mcp.json']) {
+    const found = [...readFileSync(new URL(rel, import.meta.url), 'utf8').matchAll(pinned)].map((m) => m[1] ?? m[2]);
+    assert.ok(found.length > 0, `${rel} names no pinned version`);
+    assert.deepEqual([...new Set(found)], [version], `${rel} pins ${[...new Set(found)]}`);
+  }
+  const { allowedDirectories } = read('../../templates/config.json');
+  assert.ok(Array.isArray(allowedDirectories) && allowedDirectories.length > 0, 'templates/config.json sets allowedDirectories');
+});
