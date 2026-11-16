@@ -38,12 +38,9 @@ tasks:
       - sh scripts/install-smoke-linux.sh
 
   install-smoke:report:
-    desc: "Render the evidence tables (Markdown) from every result.json under tmp/install-smoke."
+    desc: "Rebuild docs/install-smoke/README.md, the evidence tables, from docs/install-smoke/*.json (copy a run's result.json there first)."
     cmds:
-      - node scripts/install-smoke.mjs --report {{.FILES}}
-    vars:
-      FILES:
-        sh: find ../tmp/install-smoke -name result.json | sort | tr '\n' ' '
+      - node scripts/install-smoke.mjs --report ../docs/install-smoke/*.json > ../docs/install-smoke/README.md
 
   supply-chain:
     desc: "CSO · 'Can we accept what we ship?' Generates the SBOM with npm, checks every package against the signed register and every licence against the allowed list, writes docs/supply-chain/register.md."
