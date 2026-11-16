@@ -21,6 +21,23 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 | 🔐 **Diagnose a server over SSH** | One `ssh` session kept open across turns | Faster remote triage. The blocklist checks the remote command and each typed line; the remote account's permissions are still the real limit |
 | 🏢 **One approved setup for the team** | Commit a pinned `.mcp.json` | Every seat runs the same reviewed version |
 
+<details>
+<summary><b>🤔 Already using Claude Code or Codex? When you need Command Center, and when you don't</b></summary>
+
+Claude Code and Codex already run commands and edit files in your repository. Command Center fills the gaps around them:
+
+| Need | Why it matters | With Command Center | If you skip it |
+|---|---|---|---|
+| 🖥️ **Claude Desktop seats** (leaders, ops, analysts) | The people closest to the business work in the desktop app | One installer file; the person picks the allowed folders | No local shell or file tools in the desktop app unless you install and review another MCP server |
+| 📏 **One rule set across AI tools** | Security reviews one policy, not one per tool and seat | The same folder limit and command blocklist in Claude Code, Claude Desktop, Codex and VS Code; the agent cannot change them through its tools | Each tool's permissions are set and checked separately on every seat |
+| 🔁 **Long-running, interactive work** | SSH triage, REPL data checks and log tails need state between turns | Sessions stay open, and the agent types into them; typed lines are checked against the blocklist | Behaviour depends on each tool's built-in shell |
+| 🧾 **Audit and supply chain** | Every tool on a seat needs an owner and a trail | Signed dependency register, npm provenance from CI, owner approval before each release, no telemetry, one owner | You review and track a third-party server yourself |
+
+**You don't need it** if you're an engineer working in your own repository with Claude Code's or Codex's built-in shell.
+
+**Footprint:** 2 runtime dependencies (MCP SDK, zod), 1,562 lines of server code, runs on the seat with no hosting, and a release is one tag plus one owner approval.
+</details>
+
 ## 🧩 Clients and platforms
 
 | Client | Install | macOS | Linux | Windows |
