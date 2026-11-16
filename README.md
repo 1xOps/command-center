@@ -73,21 +73,34 @@ codex mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/proj
 </details>
 
 <details>
-<summary><b>🏢 Team configuration (one pinned setup for every seat)</b></summary>
+<summary><b>🏢 Enterprise install (one pinned, verified setup for every seat)</b></summary>
 
-Claude Code — commit `.mcp.json` at the project root:
+**1. Check where the version came from.** Every release is built and published by GitHub Actions with npm provenance.
+```bash
+npm view @1xops/command-center@0.4.2 dist.attestations   # provenance.predicateType: https://slsa.dev/provenance/v1
+npm audit signatures                                       # after installing: "verified attestations"
+```
+
+**2. Pin it for every seat.** Never use `@latest`. Claude Code: commit [`templates/.mcp.json`](templates/.mcp.json) at the project root. The `.` limits the agent to that project.
 ```json
 { "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "."] } } }
 ```
-
-Codex — `~/.codex/config.toml`:
+Codex: add this to `~/.codex/config.toml`:
 ```toml
 [mcp_servers.command-center]
 command = "npx"
 args = ["-y", "@1xops/command-center@0.4.2", "/path/to/project"]
 ```
 
-Check where a build came from: `npm view @1xops/command-center@0.4.2 dist.attestations` (npm provenance from the CI release).
+**3. Set the folder limit for plugin installs.** The plugin passes no folder, so give each seat [`templates/config.json`](templates/config.json) at `~/.command-center/config.json` (Windows: `%USERPROFILE%\.command-center\config.json`; `COMMAND_CENTER_CONFIG_DIR` moves it). Set `allowedDirectories` to the approved folders.
+- If you leave `blockedCommands` out, the built-in list applies. If you list it, your list replaces the built-in one.
+- Folders passed at launch (step 2) take precedence over the file.
+
+**4. Check a seat.** `npx -y @1xops/command-center@0.4.2 --version` prints `0.4.2`. Ask the agent to read a file outside the approved folders. It is refused with a message that names the setting:
+```text
+refused: /etc/hostname is outside allowedDirectories (/work/project). allowedDirectories is set in /root/.command-center/config.json; only a person can change it.
+```
+The agent cannot widen its own access: `set_config_value` refuses `allowedDirectories`.
 </details>
 
 <details>
