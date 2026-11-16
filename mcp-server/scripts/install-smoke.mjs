@@ -266,7 +266,10 @@ if (!NO_MODEL) {
       if (!s.result || s.result.isError || s.result.subtype !== 'success') throw new Error(`session ended ${s.timedOut ? 'by timeout' : s.result?.subtype ?? `with exit ${s.exit}`}`);
       if (!cc.length) throw new Error('no Command Center tool was used');
     } else {
-      const sandbox = flag('--codex-bypass') ? ['--dangerously-bypass-approvals-and-sandbox'] : ['-s', 'workspace-write'];
+      // codex exec never prompts, so an unapproved MCP call is rejected ("requires approval, while the approval
+      // policy is set to `never`", measured 2026-11-16 on 0.169.0). Approve this one server's tools, nothing else.
+      const approve = ['-c', `mcp_servers.${CC_PREFIX.codex}.default_tools_approval_mode="approve"`];
+      const sandbox = flag('--codex-bypass') ? ['--dangerously-bypass-approvals-and-sandbox'] : ['-s', 'workspace-write', ...approve];
       const r = await run(clientCmd[0], [...clientCmd.slice(1), 'exec', '--json', '--skip-git-repo-check', ...sandbox, '-C', CLONE, '-'], { cwd: CLONE, input: TASK.codex, timeout: TIMEOUT, name: 'task' });
       const ev = r.out.split('\n').flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
       const items = ev.filter((e) => e.type === 'item.completed').map((e) => e.item);
@@ -274,9 +277,9 @@ if (!NO_MODEL) {
       const text = items.filter((i) => i.type === 'agent_message').map((i) => i.text).join('\n');
       const failed = ev.find((e) => e.type === 'turn.failed' || e.type === 'error');
       agentCounts = resultLine(text);
-      result.checks.task = { toolsUsed: [...new Set(mcp.map((i) => `${i.server}.${i.tool}`))], ccToolCalls: mcp.filter((i) => i.server === CC_PREFIX.codex).length, failedCcCalls: mcp.filter((i) => i.status === 'failed').length, shellCalls: items.filter((i) => i.type === 'command_execution').length, usage: ev.findLast?.((e) => e.type === 'turn.completed')?.usage ?? null, reported: agentCounts, exit: r.code, summary: text.slice(-1200) };
+      result.checks.task = { toolsUsed: [...new Set(mcp.map((i) => `${i.server}.${i.tool}`))], ccToolCalls: mcp.filter((i) => i.server === CC_PREFIX.codex).length, okCcCalls: mcp.filter((i) => i.server === CC_PREFIX.codex && i.status === 'completed' && !i.error).length, failedCcCalls: mcp.filter((i) => i.status === 'failed' || i.error).length, approval: flag('--codex-bypass') ? 'bypass (container only)' : 'default_tools_approval_mode=approve for command-center', shellCalls: items.filter((i) => i.type === 'command_execution').length, usage: ev.findLast?.((e) => e.type === 'turn.completed')?.usage ?? null, reported: agentCounts, exit: r.code, summary: text.slice(-1200) };
       if (r.code !== 0 || failed) throw new Error(`codex exec exited ${r.code}${failed ? `: ${JSON.stringify(failed).slice(0, 300)}` : ''}`);
-      if (!result.checks.task.ccToolCalls) throw new Error('no Command Center tool was used');
+      if (!result.checks.task.okCcCalls) throw new Error(`no Command Center tool call succeeded (${result.checks.task.ccToolCalls} made)`);
     }
     return `${result.checks.task.ccToolCalls} Command Center tool calls; reported ${JSON.stringify(agentCounts)}`;
   });
