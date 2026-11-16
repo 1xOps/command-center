@@ -20,6 +20,31 @@ tasks:
     cmds:
       - act workflow_dispatch -P macos-latest=-self-hosted -W .github/workflows/mcp-server-tests.yml -j test --matrix os:macos-latest
 
+  install-smoke:
+    desc: "'How long from a clean machine to a finished task?' Times a pinned client install, the README lines, the tool count, the test task and (Claude) four document-skill files, in a fresh HOME on this machine. CLIENT=claude (needs ANTHROPIC_API_KEY) or CLIENT=codex CODEX_AUTH=~/.codex/auth.json. Writes tmp/install-smoke/<os>-<client>/result.json."
+    vars:
+      CLIENT: '{{.CLIENT | default "claude"}}'
+    cmds:
+      - node scripts/install-smoke.mjs --client {{.CLIENT}} --isolate --out ../tmp/install-smoke/{{OS}}-{{.CLIENT}} {{if .CODEX_AUTH}}--codex-auth {{.CODEX_AUTH}}{{end}} {{.CLI_ARGS}}
+
+  install-smoke:linux:
+    desc: "The same timed install in a throwaway node:24-slim container. CLIENT=claude ENV_FILE=<file holding ANTHROPIC_API_KEY> or CLIENT=codex CODEX_AUTH=~/.codex/auth.json. Needs Docker."
+    env:
+      CLIENT: '{{.CLIENT | default "claude"}}'
+      ENV_FILE: '{{.ENV_FILE}}'
+      CODEX_AUTH: '{{.CODEX_AUTH}}'
+      CLI_ARGS: '{{.CLI_ARGS}}'
+    cmds:
+      - sh scripts/install-smoke-linux.sh
+
+  install-smoke:report:
+    desc: "Render the evidence tables (Markdown) from every result.json under tmp/install-smoke."
+    cmds:
+      - node scripts/install-smoke.mjs --report {{.FILES}}
+    vars:
+      FILES:
+        sh: find ../tmp/install-smoke -name result.json | sort | tr '\n' ' '
+
   supply-chain:
     desc: "CSO · 'Can we accept what we ship?' Generates the SBOM with npm, checks every package against the signed register and every licence against the allowed list, writes docs/supply-chain/register.md."
     cmds:
