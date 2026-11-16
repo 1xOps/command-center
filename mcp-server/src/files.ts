@@ -1,7 +1,7 @@
 import { appendFile, lstat, mkdir, open, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { getConfig } from './config.js';
-import { validatePath } from './policy.js';
+import { expandHome, refuseSettingsAncestor, validatePath } from './policy.js';
 
 const MAX_READ_BYTES = 64 * 1024 * 1024; // larger files: use start_process with tail/head/grep
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -182,8 +182,10 @@ export async function createDirectory(requested: string): Promise<string> {
 
 /** The entry itself (a link stays a link): its folder is resolved and checked, its name kept. */
 async function validateEntry(requested: string): Promise<string> {
-  const absolute = path.resolve(requested);
-  return path.join(await validatePath(path.dirname(absolute)), path.basename(absolute));
+  const absolute = path.resolve(expandHome(requested));
+  const entry = path.join(await validatePath(path.dirname(absolute)), path.basename(absolute));
+  await refuseSettingsAncestor(entry, requested);
+  return entry;
 }
 
 export async function moveFile(source: string, destination: string): Promise<{ from: string; to: string }> {

@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { getConfig } from './config.js';
 import { log } from './log.js';
-import { checkCommand, programName, SHELLS, validatePath } from './policy.js';
+import { checkCommand, programName, REMOTE_SHELLS, SHELLS, validatePath } from './policy.js';
 
 const MAX_BUFFER = 1024 * 1024; // keep the last 1 MiB of output per session
 const MAX_SESSIONS = 50;
@@ -130,7 +130,7 @@ export async function startProcess(command: string, timeoutMs: number, cwd?: str
   }
   const session: Session = {
     pid, command, cwd: workdir, child, startedAt: Date.now(), output: '', dropped: 0, cursor: 0,
-    exitCode: null, signal: null, exited: false, checkInput: programs.some((p) => SHELLS.has(p)), listeners: new Set(),
+    exitCode: null, signal: null, exited: false, checkInput: programs.some((p) => SHELLS.has(p) || REMOTE_SHELLS.has(p)), listeners: new Set(),
   };
   sessions.set(pid, session);
   child.stdout?.setEncoding('utf8').on('data', (chunk: string) => append(session, chunk));

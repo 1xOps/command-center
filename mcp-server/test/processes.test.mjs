@@ -1,6 +1,7 @@
 // Commands are `node -e` one-liners so the same test runs in sh/zsh (macOS, Linux) and
 // PowerShell (Windows): double quotes outside, single quotes inside, no $ or backticks.
 import assert from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { isolateConfig, scratch } from './helpers.mjs';
@@ -93,5 +94,18 @@ test('each shell gets its own way of running one command line', () => {
 test('input to a shell started indirectly is checked too', async () => {
   const started = await proc.startProcess(WINDOWS ? 'cmd' : 'exec sh', 1000);
   await assert.rejects(proc.interact(started.pid, 'sudo id', 1000), /blockedCommands/);
+  await proc.terminate(started.pid);
+});
+
+test('ssh: a remote command after the host is checked, and typed input is checked too', { skip: WINDOWS && 'POSIX fake ssh' }, async (t) => {
+  await assert.rejects(proc.startProcess('ssh admin@host sudo reboot', 1000), /blockedCommands/);
+  // A stand-in `ssh` that echoes its input, so no network is needed.
+  const dir = scratch(t, 'fake-ssh');
+  const fake = path.join(dir, 'ssh');
+  writeFileSync(fake, '#!/bin/sh\nexec cat\n', { mode: 0o755 });
+  const started = await proc.startProcess(`${fake} host`, 1000);
+  await assert.rejects(proc.interact(started.pid, 'sudo reboot', 1000), /blockedCommands/);
+  const reply = await proc.interact(started.pid, 'uptime', 5000);
+  assert.match(reply.output, /uptime/);
   await proc.terminate(started.pid);
 });

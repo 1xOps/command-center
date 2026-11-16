@@ -53,6 +53,13 @@ export function isInside(child: string, parent: string): boolean {
  * An empty list allows the whole filesystem, as documented. The config folder is always
  * refused: an agent must not edit its own limits with the file tools.
  */
+/** Refuses an entry that is, or contains, the settings folder (moving it would move the limits). */
+export async function refuseSettingsAncestor(entry: string, requested: string): Promise<void> {
+  if (isInside(await resolveReal(path.resolve(configDir())), entry)) {
+    throw new Error(`refused: ${requested} is or contains the Command Center settings folder; only a person can change ${configPath()}`);
+  }
+}
+
 export async function validatePath(requested: string): Promise<string> {
   if (!requested || requested.includes('\0')) throw new Error('path is empty or contains a NUL byte');
   const absolute = path.resolve(expandHome(requested));
@@ -76,6 +83,12 @@ export const SHELLS = new Set([
   'sh', 'bash', 'zsh', 'dash', 'ksh', 'fish', 'csh', 'tcsh', 'nu', 'xonsh', 'script',
   'powershell', 'pwsh', 'cmd',
 ]);
+/**
+ * Remote shells: what is typed into them is a command line on another machine, so it is
+ * checked like shell input. The remote account's permissions remain the real limit there.
+ * REPLs (python -i, node -i) are not here: their input is code, not command lines.
+ */
+export const REMOTE_SHELLS = new Set(['ssh', 'mosh']);
 // Words that run a later word as the command: POSIX wrappers, shells given a command, and
 // their Windows equivalents. After one of these, every later word is checked.
 const PREFIX_WORDS = new Set([
@@ -122,6 +135,21 @@ export function checkCommand(commandLine: string): string[] {
     const name = programName(first);
     programs.push(name);
     refuse(name);
+    if (REMOTE_SHELLS.has(name)) {
+      // ssh/mosh [options] host [command...]: skip options (with their values) and the host,
+      // then check the remote command like a typed line, so `ssh net` or
+      // `ssh host cat /etc/passwd` pass and `ssh host sudo reboot` is refused.
+      let j = i + 1;
+      while (j < words.length && (words[j] ?? '').startsWith('-')) {
+        const opt = words[j] ?? '';
+        j += /^-[BbcDEeFIiJLlmOoPpQRSWw]$/.test(opt) ? 2 : 1;
+      }
+      const rest = words.slice(j + 1);
+      if (rest[0] === '--') rest.shift();
+      const remote = rest.join(' ');
+      if (remote) programs.push(...checkCommand(remote));
+      continue;
+    }
     if (PREFIX_WORDS.has(name)) {
       // Wrapper flags and their values are not reliably told apart from the command they run
       // (`timeout -s KILL 5 sudo`), so every later non-flag word is checked as a program.

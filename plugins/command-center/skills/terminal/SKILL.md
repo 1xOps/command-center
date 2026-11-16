@@ -37,6 +37,7 @@ Always decide from the exit code and the output text, never from what the comman
 - `command-center:start_process("ssh -o BatchMode=yes -o ConnectTimeout=10 user@host")`. `BatchMode` makes a missing key fail fast instead of waiting for a password.
 - An agent must never type a password or passphrase. If a prompt asks for one, stop and ask the person to set up a key or an agent.
 - Run remote commands with `command-center:interact_with_process`; end with `exit` and confirm the session ended.
+- Each typed line is checked against `blockedCommands`, as in a local shell. A refusal is final: tell the person instead of rephrasing the command.
 
 ## Long output
 
