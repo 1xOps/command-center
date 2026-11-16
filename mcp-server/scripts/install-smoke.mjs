@@ -339,7 +339,8 @@ function unzip(file) {
   }
   return files;
 }
-const xmlText = (x) => [...String(x).matchAll(/<(?:a:|w:)?t(?:\s[^>]*)?>([^<]*)<\/(?:a:|w:)?t>/g)].map((m) => m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"'));
+// A function declaration (hoisted): inspect() runs from the top-level code above, before a const here would exist.
+function xmlText(x) { return [...String(x).matchAll(/<(?:a:|w:)?t(?:\s[^>]*)?>([^<]*)<\/(?:a:|w:)?t>/g)].map((m) => m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')); }
 function inspect(kind, file) {
   try {
     if (kind === 'pdf') {
