@@ -22,20 +22,18 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 | 🏢 **One approved setup for the team** | Commit a pinned `.mcp.json` | Every seat runs the same reviewed version |
 
 <details>
-<summary><b>🤔 Already using Claude Code or Codex? When you need Command Center, and when you don't</b></summary>
+<summary><b>🤔 Already have Claude Code or Codex? Do you still need this?</b></summary>
 
-Claude Code and Codex already run commands and edit files in your repository. Command Center fills the gaps around them:
+**You probably don't** if you work in your own repository with Codex, or with Claude Code and no need for sessions that stay open between turns. **You do** if one of these rows is yours:
 
-| Need | Why it matters | With Command Center | If you skip it |
+| You need | Why it matters | With Command Center | Without it |
 |---|---|---|---|
-| 🖥️ **Claude Desktop seats** (leaders, ops, analysts) | The people closest to the business work in the desktop app | One installer file; the person picks the allowed folders | No local shell or file tools in the desktop app unless you install and review another MCP server |
-| 📏 **One rule set across AI tools** | Security reviews one policy, not one per tool and seat | The same folder limit and command blocklist in Claude Code, Claude Desktop, Codex and VS Code; the agent cannot change them through its tools | Each tool's permissions are set and checked separately on every seat |
-| 🔁 **Long-running, interactive work** | SSH triage, REPL data checks and log tails need state between turns | Sessions stay open, and the agent types into them; typed lines are checked against the blocklist | Behaviour depends on each tool's built-in shell |
-| 🧾 **Audit and supply chain** | Every tool on a seat needs an owner and a trail | Signed dependency register, npm provenance from CI, owner approval before each release, no telemetry, one owner | You review and track a third-party server yourself |
+| 🖥️ **Shell and file tools in Claude Desktop chat** | Not everyone on the team works in a terminal | One installer file; the person picks the allowed folders | Use the app's Code tab (Claude Code) or Cowork, which work in folders the person picks, under their own settings |
+| 📏 **One rule set across AI tools** | Security reviews one policy, not one per tool | The same folder limit and command blocklist for this server in Claude Code, Claude Desktop, Codex and VS Code; its file and settings tools cannot loosen them, but the commands it runs are not sandboxed | Each tool has its own permission settings to set and review (Claude Code managed settings, Codex requirements, VS Code approvals) |
+| 🔁 **Sessions that stay open** | SSH triage, REPLs and log tails need state between turns | Sessions stay open and the agent types into them; lines typed into a shell or SSH session are checked against the blocklist (REPL input is not). Plain pipes: no password prompts or full-screen programs | Codex and VS Code can type into a running terminal; Claude Code runs each command in its own process |
+| 🧾 **A supply chain you can audit** | Every tool on a seat needs an owner and a trail | Signed dependency register, npm provenance, owner approval before each release, no telemetry | Any other server you add needs the same review: provenance, a dependency list, an owner |
 
-**You don't need it** if you're an engineer working in your own repository with Claude Code's or Codex's built-in shell.
-
-**Footprint:** 2 runtime dependencies (MCP SDK, zod), 1,562 lines of server code, runs on the seat with no hosting, and a release is one tag plus one owner approval.
+**Footprint:** 2 direct runtime dependencies (MCP SDK, zod; every package they pull in is in the dependency register), 1,562 lines of server code, nothing to host, and a release is one tag plus one owner approval.
 </details>
 
 ## 🧩 Clients and platforms
