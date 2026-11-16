@@ -27,7 +27,7 @@ The bundle carries its own copy of the server, so no `npx` or registry access is
 }
 ```
 
-- On Windows, write folders as `"C:\\Users\\me\\work"` (escaped backslashes) and use `"command": "npx.cmd"` if `npx` is not found.
+- On Windows, write folders as `"C:\\Users\\me\\work"` (escaped backslashes).
 - On macOS, if Claude Desktop cannot find `npx`, set `command` to the absolute path from `which npx`.
 - Quit Claude Desktop fully (not just close the window) and start it again after each change.
 

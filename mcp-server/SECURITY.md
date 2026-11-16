@@ -23,7 +23,7 @@ The first three are guardrails against mistakes. A program started in a session 
 
 ## Supply chain
 
-The server ships two packages: the official MCP SDK and zod (its required peer), plus their own dependencies, all MIT, ISC or BSD licensed. The list is generated from `npm sbom` into `docs/supply-chain/register.md` by `task mcp:supply-chain`. CI fails on an unregistered package or licence, and a release fails until the owner signs every entry. npm releases carry build provenance.
+The server ships two packages: the official MCP SDK and zod (its required peer), plus their own dependencies, all MIT, ISC or BSD licensed. The list is generated from `npm sbom` into `docs/supply-chain/register.md` by `task mcp:supply-chain`. CI fails on an unregistered package or licence, and a release fails until the owner signs every entry. npm releases from 0.4.1 on carry build provenance (published from CI by OIDC trusted publishing).
 
 ## Reporting a vulnerability
 

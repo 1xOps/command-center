@@ -1,123 +1,109 @@
 # 1xOps Command Center
 
-An MCP server that gives Claude and OpenAI agents **persistent terminal sessions** (tests, builds, logs, REPLs, SSH) and **text-file tools**, limited to the folders a person allows, with one command blocklist. It runs on your machine with your permissions and sends nothing anywhere.
+**Your AI agent keeps a terminal open — tests, logs, REPLs and SSH — inside the folders you allow.**
 
-- **Clients:** Claude Code, Claude Desktop, OpenAI Codex CLI, VS Code, and any other MCP client that starts a stdio server.
-- **Platforms:** macOS, Linux and Windows. macOS and Linux are tested locally before each push; all three run in CI on every release pull request to `main`.
-- **Requires:** Node.js 24 or later (Claude Code, Codex). Claude Desktop installs it from one file.
-- **Package:** `@1xops/command-center` · MCP Registry name `io.github.1xOps/command-center` · Apache-2.0.
+A local MCP server: shell sessions that stay open between turns, plus text-file tools, under one folder limit and one command blocklist that only a person can change. It runs with your permissions and sends nothing anywhere.
 
-## Install (always pin the version)
+| | |
+|---|---|
+| 🧩 **Clients** | Claude Code (plugin or server only), Claude Desktop (`.mcpb`), OpenAI Codex CLI, VS Code |
+| 💻 **Platforms** | macOS, Linux, Windows (Windows not yet run in CI) |
+| ⚙️ **Requires** | Node.js 24+ (Claude Desktop installs it from the `.mcpb`) |
+| 📦 **Package** | `@1xops/command-center` · MCP Registry `io.github.1xOps/command-center` · 2 runtime deps (MCP SDK, zod) · Apache-2.0 |
 
-Replace `/path/to/project` with the folders the agent may use. Folders given at launch become `allowedDirectories` for that session.
+## 💼 What teams use it for
 
-**Claude Code: plugin (server plus usage skills)**
+| Scenario | Business value |
+|---|---|
+| 🧪 **Fix failing tests** — run, read failures, edit, re-run in one shell | Environment stays set up; one diff to review |
+| 🚨 **Watch logs in an incident** — tail, read on demand, stop when done | Live second pair of eyes; nothing left running |
+| 📊 **Check data in a REPL** — `python3 -i` / `node -i` keeps data loaded | Answers from the data itself |
+| 🔐 **Diagnose over SSH** — one session kept open | Faster triage; the remote account's permissions are the limit there |
+| 🏢 **One team setup** — commit a pinned `.mcp.json` | Every seat runs the same reviewed version |
 
-```
+## 🚀 Install (pinned)
+
+Replace `/path/to/project` with the folders the agent may use; they become `allowedDirectories`.
+
+```bash
+# Claude Code: plugin (server + 6 skills) — passes no folder; see Settings
 /plugin marketplace add 1xOps/command-center
 /plugin install command-center@command-center
+
+# Claude Code: server only
+claude mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/project
+
+# OpenAI Codex CLI
+codex mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/project
 ```
 
-**Claude Code: server only**
+<details>
+<summary><b>VS Code, Claude Desktop, team setup, container</b></summary>
 
-```bash
-claude mcp add command-center -- npx -y @1xops/command-center@0.4.0 /path/to/project
-```
-
-**OpenAI Codex CLI**
-
-```bash
-codex mcp add command-center -- npx -y @1xops/command-center@0.4.0 /path/to/project
-```
-
-**VS Code (agent mode):** add to `.vscode/mcp.json`:
-
+**VS Code** — `.vscode/mcp.json`:
 ```json
-{ "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.0", "${workspaceFolder}"] } } }
+{ "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.1", "${workspaceFolder}"] } } }
 ```
 
-On Windows, if a client cannot start `npx`, use `"command": "npx.cmd"`.
+**Claude Desktop (macOS, Windows)** — open `command-center-0.4.1.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders to allow.
 
-**Claude Desktop (macOS, Windows):** download `command-center-0.4.0.mcpb` from the [release](https://github.com/1xOps/command-center/releases) and open it. The installer asks which folders Command Center may use.
-
-**Container (any OS with Docker):** it sees only the folder you mount.
-
-```bash
-docker build -t command-center:0.4.0 mcp-server
-claude mcp add command-center -- docker run -i --rm -v "/path/to/project:/workspace" command-center:0.4.0
-```
-
-## Team configuration (one approved setup for every seat)
-
-Commit this to the project as `.mcp.json` (Claude Code). Every engineer then runs the same pinned version with the same folders:
-
+**Team setup** — commit `.mcp.json` (Codex: same args under `[mcp_servers.command-center]` in `~/.codex/config.toml`):
 ```json
-{
-  "mcpServers": {
-    "command-center": {
-      "command": "npx",
-      "args": ["-y", "@1xops/command-center@0.4.0", "."]
-    }
-  }
-}
+{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.1", "."] } } }
 ```
+Provenance of a build: `npm view @1xops/command-center@0.4.1 dist.attestations`.
 
-The Codex equivalent, in `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.command-center]
-command = "npx"
-args = ["-y", "@1xops/command-center@0.4.0", "/path/to/project"]
+**Container** — from a repo checkout; sees only the mounted folder:
+```bash
+docker build -t command-center:0.4.1 mcp-server
+claude mcp add command-center -- docker run -i --rm --network none -v "/path/to/project:/workspace" command-center:0.4.1
 ```
+</details>
 
-Check what a seat runs with `npm view @1xops/command-center@0.4.0 dist.attestations`. It shows the build provenance npm recorded at publish.
-
-## Tools (20)
+## 🛠️ Tools (20)
 
 | Area | Tools |
 |---|---|
 | Processes | `start_process`, `interact_with_process`, `read_process_output`, `force_terminate`, `list_sessions` |
 | Files (text; images returned as images) | `read_file`, `read_multiple_files`, `write_file`, `edit_block`, `list_directory`, `get_file_info`, `create_directory`, `move_file` |
-| Search (ripgrep when installed) | `search`; for large result sets, paged: `start_search`, `get_more_search_results`, `stop_search` (up to 10 kept, each freed 10 minutes after its last read) |
-| System (read-only) | `list_processes`: the OS process list with memory, on macOS, Linux and Windows |
+| Search (ripgrep when installed) | `search`; paged: `start_search`, `get_more_search_results`, `stop_search` |
+| System (read-only) | `list_processes` |
 | Settings | `get_config`, `set_config_value` |
 
-PDF, Word, Excel and PowerPoint files are handled by the official document skills: `pdf`, `docx`, `xlsx` and `pptx` from Anthropic's skills repository. They work in Claude and, as Agent Skills, in Codex (`.agents/skills`). Each lists the tools it needs, for example LibreOffice or Python packages.
+For PDF, Word, Excel and PowerPoint, use Anthropic's document skills (`pdf`, `docx`, `xlsx`, `pptx`).
 
-## Settings
+## 🛡️ Settings and security
 
-Settings live in `~/.command-center/config.json` (on Windows, `%USERPROFILE%\.command-center\config.json`). The file is created with defaults on first start.
+`~/.command-center/config.json` (Windows: `%USERPROFILE%\.command-center\config.json`), created on first start.
 
 | Key | Purpose | Who can change it |
 |---|---|---|
-| `allowedDirectories` | Folders every file tool and working directory must be inside. Folders given at launch override this. **Empty means no folder limit.** | a person only |
+| `allowedDirectories` | Folders every file tool and working folder must be inside. Launch folders override it. **Empty = no folder limit** | a person only |
 | `blockedCommands` | Programs refused wherever they start a command (defaults include `sudo`, `dd`, `mount`, `diskpart`, `reg`) | a person only |
-| `defaultShell` | Shell for sessions (default: your login shell; PowerShell on Windows) | a person only |
-| `fileReadLineLimit` | Lines per `read_file` (default 1000) | person or agent |
-| `fileWriteLineLimit` | Lines per `write_file` call (default 50) | person or agent |
+| `defaultShell` | Session shell (login shell; PowerShell on Windows) | a person only |
+| `fileReadLineLimit` / `fileWriteLineLimit` | Lines per read (1000) / per write (50) | person or agent |
 
-An agent cannot widen its own access: `set_config_value` refuses the first three keys.
+<details>
+<summary><b>Limits you should know</b></summary>
 
-## Security
+- Guardrails against mistakes, **not a sandbox**: a program started in a session can reach any path and network you can, and could edit the config file (applies at next start).
+- The command check reads command lines — not scripts, REPL input, or what is typed over SSH.
+- Each session keeps its last 1 MiB of output in memory; a secret a command prints is visible to the client.
+- For untrusted work, use the container. No telemetry or remote calls. See [SECURITY.md](SECURITY.md) · [PRIVACY.md](PRIVACY.md).
+</details>
 
-Command Center runs commands with your permissions. `allowedDirectories` and `blockedCommands` are guardrails against mistakes, **not a sandbox**: a program started in a session can reach anything you can. For untrusted work, use the container. See [SECURITY.md](SECURITY.md).
-
-## Development
+<details>
+<summary><b>Development and releases</b></summary>
 
 ```bash
-npm ci
-npm test                    # build + all tests (node:test)
-task setup                  # once per clone: turns on the git-standard hooks
-task check                  # every local gate before the owner commits develop
-task mcp:verify             # from the repo root: timed end-to-end check with evidence
-task mcp:act                # the real CI workflow's macOS job on this Mac (act, no runner image)
-task mcp:ci-local           # the Linux CI job in the pinned Wolfi image
-task mcp:supply-chain       # SBOM and the signed dependency register
+npm ci && npm test          # build + all tests
+task check                  # every local gate (from the repo root)
+task mcp:ci-local           # Linux CI job in the pinned Wolfi image
+task mcp:supply-chain       # SBOM against the signed dependency register
 task mcp:release-rehearsal  # what would be published, publishing nothing
 ```
 
-Releases run in CI from a tag `mcp-server-vX.Y.Z`. They publish only after the owner approves, through the `release` environment (see `.github/workflows/mcp-server-release.yml`).
+Releases run in CI from a tag `command-center-vX.Y.Z` and publish to npm with provenance (OIDC trusted publishing) only after the owner approves the `release` environment.
+</details>
 
-## Licence
-
-Apache-2.0 © 2026 1xOps (nnthanh101, nnthanh101@gmail.com). See [LICENSE](LICENSE). The npm packages it depends on keep their own licences; the list is in the supply-chain register.
+Apache-2.0 © 2026 1xOps. Dependencies keep their own licences; see the [supply-chain register](https://github.com/1xOps/command-center/blob/develop/docs/supply-chain/register.md).
