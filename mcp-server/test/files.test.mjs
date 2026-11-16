@@ -130,9 +130,17 @@ test('move_file expands ~ like every other file tool', async (t) => {
   const saved = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE };
   process.env.HOME = home;
   process.env.USERPROFILE = home;
-  t.after(() => Object.assign(process.env, saved));
+  t.after(() => { for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; } });
   writeFileSync(path.join(home, 'a.txt'), 'x');
   const moved = await files.moveFile('~/a.txt', '~/b.txt');
   assert.equal(moved.to, path.join(home, 'b.txt'));
   assert.ok(existsSync(path.join(home, 'b.txt')) && !existsSync(path.join(home, 'a.txt')));
+});
+
+test('move_file refuses to move the settings folder or a folder that contains it', async (t) => {
+  const { configDir } = await import('../dist/config.js');
+  const dir = configDir();
+  await assert.rejects(files.moveFile(dir, path.join(scratch(t, 'away'), 'moved')), /settings folder/);
+  await assert.rejects(files.moveFile(path.dirname(dir), path.join(scratch(t, 'away2'), 'moved')), /settings folder/);
+  assert.ok(existsSync(dir));
 });

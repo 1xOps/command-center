@@ -113,3 +113,14 @@ test('checkCommand reports the programs it saw, including shells started indirec
   assert.ok(checkCommand('true; sh').includes('sh'));
   assert.ok(checkCommand('env bash').includes('bash'));
 });
+
+test('ssh: options and host are skipped; only the remote command is checked', () => {
+  for (const ok of ['ssh net', 'ssh sc', 'ssh -i ~/.ssh/net host', 'ssh -F ~/.ssh/reg host', 'ssh -l su host',
+    'ssh -J bastion app uptime', 'ssh host cat /etc/passwd', 'ssh host kubectl get sc', 'ssh host tail /var/log/reboot',
+    'ssh -o BatchMode=yes -o ConnectTimeout=10 user@host', 'ssh -L 8080:localhost:80 host', 'mosh host']) {
+    assert.doesNotThrow(() => checkCommand(ok), ok);
+  }
+  for (const bad of ['ssh admin@host sudo reboot', 'ssh -p 22 host sudo id', 'ssh host "sudo id"', 'ssh -t host env sudo id', 'mosh host -- sudo id']) {
+    assert.throws(() => checkCommand(bad), /blockedCommands/, bad);
+  }
+});
