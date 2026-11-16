@@ -383,7 +383,16 @@ function inspect(kind, file) {
     if (kind === 'pdf') {
       const info = spawnSync('pdfinfo', [file], { encoding: 'utf8' });
       const byInfo = info.status === 0 ? Number(/Pages:\s+(\d+)/.exec(info.stdout)?.[1]) : null;
-      const byScan = (fs.readFileSync(file, 'latin1').match(/\/Type\s*\/Page(?![a-zA-Z])/g) ?? []).length;
+      // Page objects can sit inside compressed object streams (pdf-lib writes them that way), so inflate
+      // every Flate stream and count page objects in the raw file plus the inflated text.
+      const raw = fs.readFileSync(file);
+      let text = raw.toString('latin1');
+      for (const m of text.matchAll(/stream\r?\n/g)) {
+        const start = m.index + m[0].length, end = text.indexOf('endstream', start);
+        if (end < 0) continue;
+        try { text += zlib.inflateSync(raw.subarray(start, end)).toString('latin1'); } catch { /* not Flate, or not complete */ }
+      }
+      const byScan = (text.match(/\/Type\s*\/Page(?![a-zA-Z])/g) ?? []).length;
       const pages = byInfo ?? byScan;
       return { ok: pages === 1, pages, method: byInfo !== null ? 'pdfinfo' : 'page-object scan', detail: `${pages} page(s) (${byInfo !== null ? 'pdfinfo' : 'page-object scan'})` };
     }

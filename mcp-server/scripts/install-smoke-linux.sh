@@ -22,5 +22,9 @@ fi
 exec docker run "$@" node:24-slim sh -c "
   set -eu
   apt-get update -qq >/dev/null && apt-get install -y -qq --no-install-recommends git ca-certificates >/dev/null
-  node /repo/mcp-server/scripts/install-smoke.mjs --client $CLIENT --isolate --out /out/run $EXTRA \$*
+  # Run on the container's own filesystem: npm's cache lock fails on a host bind mount (ECOMPROMISED,
+  # measured 2026-11-16). Only the evidence is copied out, whatever the exit code.
+  rc=0; node /repo/mcp-server/scripts/install-smoke.mjs --client $CLIENT --isolate --out /tmp/run $EXTRA \$* || rc=\$?
+  rm -rf /out/run && mkdir -p /out/run && cp -r /tmp/run/result.json /tmp/run/logs /tmp/run/files /out/run/ 2>/dev/null || true
+  exit \$rc
 " sh ${CLI_ARGS:-}
