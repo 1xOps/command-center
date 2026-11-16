@@ -7,7 +7,7 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 | | |
 |---|---|
 | 🧩 **Clients** | Claude Code (plugin or server only), Claude Desktop (`.mcpb`), OpenAI Codex CLI, VS Code |
-| 💻 **Platforms** | macOS, Linux, Windows (Windows not yet run in CI) |
+| 💻 **Platforms** | macOS, Linux, Windows (tests pass on all three in CI: [run 43794268200](https://github.com/1xOps/command-center/actions/runs/43794268200)) |
 | ⚙️ **Requires** | Node.js 24+ (Claude Desktop installs it from the `.mcpb`) |
 | 📦 **Package** | `@1xops/command-center` · MCP Registry `io.github.1xOps/command-center` · 2 runtime deps (MCP SDK, zod) · Apache-2.0 |
 

@@ -47,7 +47,7 @@ A local MCP server: shell sessions that stay open between turns, plus text-file 
 | VS Code (agent mode) | `.vscode/mcp.json` | ✓ | ✓ | ✓ ¹ |
 
 Node.js 24 or later (Claude Desktop installs it from the `.mcpb`). 20 tools — see [`mcp-server/README.md`](mcp-server/README.md#-tools-20).
-¹ Windows code paths and tests exist; a Windows CI run has not happened yet.
+¹ Windows: 73 of 74 tests pass on GitHub-hosted Windows, 0 fail, 1 POSIX-only ssh test skipped ([run 43794268200](https://github.com/1xOps/command-center/actions/runs/43794268200), 2026-11-16). Timed client installs on Windows are not yet measured.
 
 <details>
 <summary><b>⚙️ Install for each client (pinned to 0.4.2)</b></summary>
