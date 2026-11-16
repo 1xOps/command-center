@@ -1,15 +1,9 @@
-# 1xOps Command Center. Each task names the business question it answers; the logic lives in
-# mcp-server/scripts. Git standard: develop is proved here before any push; GitHub Actions runs for main.
+# 1xOps Command Center. `task check` is the local gate before any push; GitHub Actions runs the same tests on three OSes.
 version: '3'
-
-includes:
-  mcp:
-    taskfile: mcp-server/Taskfile.yml
-    dir: mcp-server
 
 tasks:
   setup:
-    desc: "Owner · 'Are the git-standard checks on in this clone?' Turns on the standard hooks (secret scan before commit, message check, tests before push)."
+    desc: "Turn on the standard git hooks in this clone (secret scan before commit, message check, tests before push)."
     cmds:
       - git config core.hooksPath .githooks
       - bash .githooks/pre-commit --self-test
@@ -17,10 +11,17 @@ tasks:
       - bash .githooks/pre-push --self-test
 
   check:
-    desc: "CTO · 'Is develop ready for the owner to commit?' Runs every local gate: macOS job via act on this Mac, Linux job in Wolfi, supply chain."
+    desc: "Run every test (Node 24, no dependencies)."
+    dir: cli
     cmds:
-      - task: mcp:verify
-      - task: mcp:act
-      - task: mcp:ci-local
-      - task: mcp:supply-chain
-        vars: { CLI_ARGS: --release }
+      - npm test
+
+  connectors:
+    desc: "Check this machine's connectors now (account, access, expiry). Exit 0 ok, 1 warning, 2 failure."
+    cmds:
+      - node cli/bin/command-center.mjs check {{.CLI_ARGS}}
+
+  evidence:
+    desc: "Side by side on this machine: Claude Code's own `claude mcp list` against `command-center check`; writes docs/evidence/<os>-<UTC date>.json."
+    cmds:
+      - node cli/scripts/side-by-side.mjs
