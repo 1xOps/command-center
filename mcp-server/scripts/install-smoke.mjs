@@ -66,6 +66,7 @@ if (flag('--isolate')) {
 }
 const HOME = env.HOME ?? os.homedir();
 env.CODEX_HOME = path.join(WIN ? env.USERPROFILE ?? HOME : HOME, '.codex');
+fs.mkdirSync(env.CODEX_HOME, { recursive: true }); // Codex refuses a CODEX_HOME that does not exist
 const binDir = WIN ? env.npm_config_prefix : path.join(env.npm_config_prefix, 'bin');
 env.PATH = `${binDir}${path.delimiter}${env.PATH ?? env.Path ?? ''}`;
 if (WIN) delete env.Path;
@@ -116,21 +117,23 @@ function npmCli() {
   return hit;
 }
 const NPM = npmCli();
+result.host.script = spawnSync('git', ['-C', path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), 'rev-parse', '--short', 'HEAD'], { env: plainEnv, encoding: 'utf8' }).stdout?.trim() || null; // which harness ran
 result.host.npm = spawnSync(process.execPath, [NPM, '--version'], { env: plainEnv, encoding: 'utf8' }).stdout?.trim() ?? null;
 const npm = (args, o) => must(process.execPath, [NPM, ...args], o);
 const testCounts = (text) => Object.fromEntries(['tests', 'pass', 'fail', 'skipped'].map((k) => [k, Number(new RegExp(`ℹ ${k} (\\d+)`).exec(text)?.[1] ?? NaN)]));
 const resultLine = (text) => { const m = /RESULT tests=(\d+) pass=(\d+) fail=(\d+) skipped=(\d+)/.exec(text ?? ''); return m && { tests: +m[1], pass: +m[2], fail: +m[3], skipped: +m[4] }; };
 
 // MCP handshake on a stdio command: initialize → initialized → tools/list. Used for Codex, and for Claude
-// only as a diagnostic when the session does not connect. `npx` runs as node + npx-cli.js (no shell), so on
-// Windows no cmd.exe sits between us and the server and kill() stops the server itself.
+// only as a diagnostic when the session does not connect. `npx` runs as node + npx-cli.js (no shell, so no
+// argument quoting through cmd.exe). npm starts the server as its child: on POSIX npm forwards the signal; on
+// Windows kill() would end only npx, so the whole tree is ended with taskkill /T.
 function mcpToolsList(command, args, cwd) {
   return new Promise((resolve, reject) => {
     const [cmd, lead] = command === 'npx' ? [process.execPath, [path.join(path.dirname(NPM), 'npx-cli.js')]] : [command, []];
     const child = spawn(cmd, [...lead, ...args], { cwd, env: plainEnv, windowsHide: true });
     child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     let buf = '', err = '', settled = false;
-    const settle = (fn, v) => { if (settled) return; settled = true; clearTimeout(timer); child.kill(); fn(v); };
+    const settle = (fn, v) => { if (settled) return; settled = true; clearTimeout(timer); if (WIN && child.pid) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true }); else child.kill(); fn(v); };
     const timer = setTimeout(() => settle(reject, new Error(`tools/list timed out; stderr: ${err.slice(-400)}`)), 180_000);
     const send = (o) => { try { child.stdin.write(`${JSON.stringify(o)}\n`); } catch {} };
     child.stdin.on('error', () => {});
@@ -354,7 +357,9 @@ function writeResult() {
   result.measuredTo = NO_MODEL ? 'tool count (--no-model)' : 'task done';
   result.firstStepStart = first?.start ?? null;
   result.minutesToTaskDone = first && done?.ok ? +((Date.parse(done.end) - Date.parse(first.start)) / 60000).toFixed(2) : null;
-  result.ok = result.steps.length > 0 && result.steps.every((s) => s.ok);
+  // A run that never reached the end (crash, cancelled job) is not a pass, whatever its steps so far say.
+  result.complete = Boolean(result.finished);
+  result.ok = result.complete && result.steps.length > 0 && result.steps.every((s) => s.ok);
   // Local paths stay out of the evidence: the run folder is written as <out>.
   fs.writeFileSync(path.join(OUT, 'result.json'), redact(JSON.stringify(result, null, 2)).split(JSON.stringify(OUT).slice(1, -1)).join('<out>'));
 }
@@ -381,13 +386,13 @@ function xmlText(x) { return [...String(x).matchAll(/<(?:a:|w:)?t(?:\s[^>]*)?>([
 function inspect(kind, file) {
   try {
     if (kind === 'pdf') {
-      const info = spawnSync('pdfinfo', [file], { encoding: 'utf8' });
+      const info = spawnSync('pdfinfo', [file], { encoding: 'utf8', env: plainEnv });
       const byInfo = info.status === 0 ? Number(/Pages:\s+(\d+)/.exec(info.stdout)?.[1]) : null;
-      // Page objects can sit inside compressed object streams (pdf-lib writes them that way), so inflate
+      // Page objects can sit inside compressed object streams (PDF 1.5+ object streams), so inflate
       // every Flate stream and count page objects in the raw file plus the inflated text.
       const raw = fs.readFileSync(file);
       let text = raw.toString('latin1');
-      for (const m of text.matchAll(/stream\r?\n/g)) {
+      for (const m of text.matchAll(/(?<!end)stream\r?\n/g)) {
         const start = m.index + m[0].length, end = text.indexOf('endstream', start);
         if (end < 0) continue;
         try { text += zlib.inflateSync(raw.subarray(start, end)).toString('latin1'); } catch { /* not Flate, or not complete */ }
@@ -433,7 +438,7 @@ function report(files) {
   console.log('# Install smoke test results\n\nGenerated by `task mcp:install-smoke:report` from the result files in this folder; do not edit by hand. Re-run a leg with `task mcp:install-smoke`, `task mcp:install-smoke:linux` or the `Install smoke · Windows` workflow.\n');
   console.log('| OS | Client | Run | Install client | Clone | README install | Server start + tools | Task | **Minutes to task done** | UTC |');
   console.log('|---|---|---|--:|--:|--:|--:|--:|--:|---|');
-  for (const r of rs) console.log(`| ${osName(r)}${r.host.isolated ? ' (fresh HOME)' : ''} | ${r.pins.clientVersion ?? r.pins.client} | ${r.ok ? 'PASS' : `FAIL (${r.steps.filter((s) => !s.ok).map((s) => s.name).join('; ')})`} | ${min(r.steps[0])} | ${min(find(r, 'git clone'))} | ${min(find(r, 'README'))} | ${min(find(r, 'server first start'))} | ${min(find(r, 'task:'))} | ${r.minutesToTaskDone == null ? '— (task not done)' : `**${r.minutesToTaskDone}**`}${r.measuredTo === 'task done' ? '' : ` (to ${r.measuredTo})`} | ${r.firstStepStart ?? r.started} → ${(find(r, 'task:') ?? find(r, 'server first start'))?.end ?? r.finished} |`);
+  for (const r of rs) console.log(`| ${osName(r)}${r.host.isolated ? ' (fresh HOME)' : ''} | ${r.pins.clientVersion ?? r.pins.client} | ${r.ok ? 'PASS' : r.finished ? `FAIL (${r.steps.filter((s) => !s.ok).map((s) => s.name).join('; ')})` : 'INCOMPLETE (run did not finish)'} | ${min(r.steps[0])} | ${min(find(r, 'git clone'))} | ${min(find(r, 'README'))} | ${min(find(r, 'server first start'))} | ${min(find(r, 'task:'))} | ${r.minutesToTaskDone == null ? '— (task not done)' : `**${r.minutesToTaskDone}**`}${r.measuredTo === 'task done' ? '' : ` (to ${r.measuredTo})`} | ${r.firstStepStart ?? r.started} → ${(find(r, 'task:') ?? find(r, 'server first start'))?.end ?? r.finished} |`);
   console.log('\n| OS | Client | Tools (method) | Task: Command Center tools used | Agent counts = `npm test` | Doc files |');
   console.log('|---|---|---|---|---|---|');
   for (const r of rs) {
