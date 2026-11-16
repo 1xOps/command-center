@@ -1,0 +1,18 @@
+{
+  "measured": "2026-11-16T08:13:34Z (date -u after the run)",
+  "command": "claude -p \"Reply with the single word ready.\" --output-format stream-json --verbose --max-turns 1",
+  "client": "Claude Code 2.1.325, fresh HOME, plugin installed from the README lines",
+  "finding": "The init event is emitted before the plugin server connects, so it cannot be used to count tools.",
+  "init": {
+    "type": "system",
+    "subtype": "init",
+    "mcp_servers": [
+      {
+        "name": "plugin:command-center:command-center",
+        "status": "pending",
+        "source": "plugin"
+      }
+    ],
+    "commandCenterTools": 0
+  }
+}

@@ -1,0 +1,40 @@
+name: Install smoke · Windows
+
+# Timed clean install on a GitHub-hosted Windows runner: pinned Claude Code, the README plugin commands,
+# the tool count, "run this repo's tests and summarise failures", and the four document-skill files.
+# macOS and Linux run locally first (`task mcp:install-smoke`); this is dispatched by hand, once, and
+# waits for the owner's approval of the `smoke` environment, which holds ANTHROPIC_API_KEY.
+# Codex on Windows is not run here (deferred by the owner on 2026-11-16).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  claude:
+    name: claude (windows-latest)
+    runs-on: windows-latest
+    environment: smoke
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Timed install and task
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node mcp-server/scripts/install-smoke.mjs --client claude --out "${{ runner.temp }}/smoke"
+      - name: Evidence table
+        if: always()
+        shell: bash
+        run: node mcp-server/scripts/install-smoke.mjs --report "${{ runner.temp }}/smoke/result.json" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: install-smoke-windows
+          path: |
+            ${{ runner.temp }}/smoke/result.json
+            ${{ runner.temp }}/smoke/logs
+            ${{ runner.temp }}/smoke/files
