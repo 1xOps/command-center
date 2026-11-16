@@ -5,7 +5,7 @@
 Persistent terminal sessions, processes and text-file tools for Claude Code, Claude Desktop and OpenAI Codex, limited to the folders a person allows. Runs locally on macOS, Linux and Windows. Sends nothing anywhere.
 
 ```
-/plugin marketplace add 1xOps/command-center-mcp
+/plugin marketplace add 1xOps/command-center
 /plugin install command-center@command-center
 ```
 

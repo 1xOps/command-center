@@ -7,8 +7,8 @@
     "email": "nnthanh101@gmail.com",
     "url": "https://github.com/1xOps"
   },
-  "homepage": "https://github.com/1xOps/command-center-mcp/tree/develop/plugins/command-center",
-  "repository": "https://github.com/1xOps/command-center-mcp",
+  "homepage": "https://github.com/1xOps/command-center/tree/develop/plugins/command-center",
+  "repository": "https://github.com/1xOps/command-center",
   "license": "Apache-2.0",
   "keywords": [
     "terminal",

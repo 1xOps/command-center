@@ -2,7 +2,7 @@
 
 An MCP server that gives Claude and OpenAI agents **persistent terminal sessions** (tests, builds, logs, REPLs, SSH) and **text-file tools**, limited to the folders a person allows, with one command blocklist. It runs on your machine with your permissions and sends nothing anywhere.
 
-- **Clients:** Claude Code, Claude Desktop, OpenAI Codex CLI, Gemini CLI, Cursor, VS Code, and any other MCP client that starts a stdio server.
+- **Clients:** Claude Code, Claude Desktop, OpenAI Codex CLI, VS Code, and any other MCP client that starts a stdio server.
 - **Platforms:** macOS, Linux and Windows. macOS and Linux are tested locally before each push; all three run in CI on every release pull request to `main`.
 - **Requires:** Node.js 24 or later (Claude Code, Codex). Claude Desktop installs it from one file.
 - **Package:** `@1xops/command-center` · MCP Registry name `io.github.1xOps/command-center` · Apache-2.0.
@@ -14,7 +14,7 @@ Replace `/path/to/project` with the folders the agent may use. Folders given at 
 **Claude Code: plugin (server plus usage skills)**
 
 ```
-/plugin marketplace add 1xOps/command-center-mcp
+/plugin marketplace add 1xOps/command-center
 /plugin install command-center@command-center
 ```
 
@@ -30,24 +30,6 @@ claude mcp add command-center -- npx -y @1xops/command-center@0.4.0 /path/to/pro
 codex mcp add command-center -- npx -y @1xops/command-center@0.4.0 /path/to/project
 ```
 
-**Gemini CLI**
-
-```bash
-gemini extensions install https://github.com/1xOps/command-center-mcp
-```
-
-The extension (`gemini-extension.json`) runs the pinned server with the current folder allowed. To choose folders, add it to `~/.gemini/settings.json` instead:
-
-```json
-{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.0", "/path/to/project"] } } }
-```
-
-**Cursor:** add to `~/.cursor/mcp.json` (all projects) or `.cursor/mcp.json` (one project):
-
-```json
-{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.0", "/path/to/project"] } } }
-```
-
 **VS Code (agent mode):** add to `.vscode/mcp.json`:
 
 ```json
@@ -56,7 +38,7 @@ The extension (`gemini-extension.json`) runs the pinned server with the current 
 
 On Windows, if a client cannot start `npx`, use `"command": "npx.cmd"`.
 
-**Claude Desktop (macOS, Windows):** download `command-center-0.4.0.mcpb` from the [release](https://github.com/1xOps/command-center-mcp/releases) and open it. The installer asks which folders Command Center may use.
+**Claude Desktop (macOS, Windows):** download `command-center-0.4.0.mcpb` from the [release](https://github.com/1xOps/command-center/releases) and open it. The installer asks which folders Command Center may use.
 
 **Container (any OS with Docker):** it sees only the folder you mount.
 

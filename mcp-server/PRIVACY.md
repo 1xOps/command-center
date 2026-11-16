@@ -10,4 +10,4 @@
 
 Your MCP client (Claude, OpenAI or another) has its own privacy terms for what it sends to its model provider.
 
-Questions: open an issue at https://github.com/1xOps/command-center-mcp/issues.
+Questions: open an issue at https://github.com/1xOps/command-center/issues.

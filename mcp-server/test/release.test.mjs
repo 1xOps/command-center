@@ -20,9 +20,3 @@ test('the plugin pins the server version; never @latest', () => {
   const args = read('../../plugins/command-center/.mcp.json').mcpServers['command-center'].args;
   assert.ok(args.includes(`${name}@${version}`), args.join(' '));
 });
-
-test('the Gemini CLI extension names and pins the same version', () => {
-  const ext = read('../../gemini-extension.json');
-  assert.equal(ext.version, version);
-  assert.ok(ext.mcpServers['command-center'].args.includes(`${name}@${version}`));
-});

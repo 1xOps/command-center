@@ -5,13 +5,13 @@
   "mcpName": "io.github.1xOps/command-center",
   "license": "Apache-2.0",
   "author": "1xOps (nnthanh101) <nnthanh101@gmail.com> (https://github.com/1xOps)",
-  "homepage": "https://github.com/1xOps/command-center-mcp/tree/develop/mcp-server",
+  "homepage": "https://github.com/1xOps/command-center/tree/develop/mcp-server",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/1xOps/command-center-mcp.git",
+    "url": "git+https://github.com/1xOps/command-center.git",
     "directory": "mcp-server"
   },
-  "bugs": "https://github.com/1xOps/command-center-mcp/issues",
+  "bugs": "https://github.com/1xOps/command-center/issues",
   "type": "module",
   "engines": {
     "node": ">=24"

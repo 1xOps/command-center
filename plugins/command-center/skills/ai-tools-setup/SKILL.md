@@ -1,6 +1,6 @@
 ---
 name: ai-tools-setup
-description: Installs, connects, checks and repairs MCP servers (Command Center or others) in Claude Code, Claude Desktop, OpenAI Codex, Gemini CLI, Cursor and VS Code, with config locations for macOS, Linux and Windows and a repeatable proof that the server answers. Use when the person wants to add an MCP server or asks why a server is missing or its tools fail.
+description: Installs, connects, checks and repairs MCP servers (Command Center or others) in Claude Code, Claude Desktop, OpenAI Codex and VS Code, with config locations for macOS, Linux and Windows and a repeatable proof that the server answers. Use when the person wants to add an MCP server or asks why a server is missing or its tools fail.
 ---
 
 # Set up and repair AI tool connections
@@ -14,8 +14,6 @@ Work in three steps: **find** the client's config, **change** it only with the p
 | Claude Code | `.mcp.json` in the project (team), or `~/.claude.json` (personal) | `claude mcp list`, `claude mcp add` |
 | Claude Desktop | Settings → Extensions (`.mcpb` bundles), or `claude_desktop_config.json` (see `references/claude-desktop.md`) | none |
 | OpenAI Codex | `~/.codex/config.toml`, section `[mcp_servers.<name>]` | `codex mcp list`, `codex mcp add` |
-| Gemini CLI | `~/.gemini/settings.json` (`mcpServers`), or a `gemini-extension.json` extension | `gemini mcp list` |
-| Cursor | `~/.cursor/mcp.json` or `.cursor/mcp.json` in the project | Settings → MCP |
 | VS Code | `.vscode/mcp.json` (`servers`) or the user profile | `MCP: List Servers` command |
 
 Read the file with `command-center:read_file` before proposing any change. Config files can hold tokens: never print a secret back to the person; refer to it by key name.
@@ -29,7 +27,7 @@ Read the file with `command-center:read_file` before proposing any change. Confi
 
 ## 3 · Prove it works
 
-1. The client lists the server (`claude mcp list`, `codex mcp list`, `gemini mcp list`, or the settings page).
+1. The client lists the server (`claude mcp list`, `codex mcp list`, or the settings page).
 2. A tool call succeeds: for Command Center, `command-center:get_config` returns the version and the allowed folders.
 3. Restart the client after a config change; most read MCP config only at start.
 

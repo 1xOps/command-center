@@ -11,7 +11,7 @@ name: MCP server · Release
 # nothing (npm publish --dry-run, registry validate only, no GitHub release).
 #
 # One-time owner setup: create the npm org @1xops and publish once by hand; add the trusted
-# publisher on npmjs.com (repository 1xOps/command-center-mcp, workflow mcp-server-release.yml,
+# publisher on npmjs.com (repository 1xOps/command-center, workflow mcp-server-release.yml,
 # environment release); create the `release` environment with the owner as required reviewer.
 on:
   push:

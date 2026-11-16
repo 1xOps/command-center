@@ -2,7 +2,7 @@
 
 ## Recommended: the bundle
 
-1. Download `command-center-0.4.0.mcpb` from the GitHub release of `1xOps/command-center-mcp`.
+1. Download `command-center-0.4.0.mcpb` from the GitHub release of `1xOps/command-center`.
 2. Open it (double-click, or Settings → Extensions → Install extension).
 3. Pick the folders Command Center may use. Claude Desktop passes each one as a launch argument.
 4. In a new chat, ask for `get_config`: it lists the folders you picked.

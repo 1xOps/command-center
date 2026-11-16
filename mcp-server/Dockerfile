@@ -29,7 +29,7 @@ USER command-center
 WORKDIR /workspace
 ENV COMMAND_CENTER_CONFIG_DIR=/home/command-center/.command-center
 LABEL org.opencontainers.image.title="1xOps Command Center" \
-      org.opencontainers.image.source="https://github.com/1xOps/command-center-mcp" \
+      org.opencontainers.image.source="https://github.com/1xOps/command-center" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.authors="1xOps (nnthanh101) <nnthanh101@gmail.com>"
 ENTRYPOINT ["node", "/app/dist/index.js", "/workspace"]
