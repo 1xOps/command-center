@@ -121,5 +121,13 @@ jobs:
           tar xzf "$ASSET" mcp-publisher
           ./mcp-publisher validate server.json
           [ "$REHEARSAL" = "true" ] && exit 0
+          # npm processes a new version before it serves the tarball (0.4.1: ~5 min), and the
+          # MCP Registry rejects a version npm does not serve yet. Wait up to 15 minutes.
+          TGZ_URL="https://registry.npmjs.org/@1xops/command-center/-/command-center-$VERSION.tgz"
+          for i in $(seq 1 60); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' "$TGZ_URL")" = 200 ] && break
+            [ "$i" = 60 ] && { echo "::error::npm still does not serve $VERSION after 15 minutes"; exit 1; }
+            sleep 15
+          done
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
