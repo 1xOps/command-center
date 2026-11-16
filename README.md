@@ -6,9 +6,9 @@
 
 A local MCP server: shell sessions that stay open between turns, plus text-file tools, under one folder limit and one command blocklist that only a person can change. It runs on your machine with your permissions and sends nothing anywhere.
 
-**Claude app (Desktop):** open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases) and pick the folders it may use.
+**Claude Desktop (macOS, Windows):** open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases) and pick the folders it may use.
 
-**Claude Code:**
+**Claude Code** (the plugin passes no folder; set the limit as in [Install for each client](#-clients-and-platforms)):
 ```
 /plugin marketplace add 1xOps/command-center
 /plugin install command-center@command-center
