@@ -1,12 +1,12 @@
 {
   "client": "claude",
-  "started": "2026-11-16T09:10:10.012Z",
+  "started": "2026-11-16T09:51:29.125Z",
   "host": {
     "platform": "linux",
     "release": "7.0.14-linuxkit",
     "arch": "arm64",
     "node": "v24.22.3",
-    "isolated": false,
+    "isolated": true,
     "runner": null,
     "npm": "11.19.1"
   },
@@ -18,91 +18,91 @@
   "steps": [
     {
       "name": "install @anthropic-ai/claude-code@2.1.325",
-      "start": "2026-11-16T09:10:10.055Z",
+      "start": "2026-11-16T09:51:29.159Z",
       "detail": "2.1.325 (Claude Code)",
       "ok": true,
-      "end": "2026-11-16T09:10:12.975Z",
-      "seconds": 2.9
+      "end": "2026-11-16T09:51:31.548Z",
+      "seconds": 2.4
     },
     {
       "name": "git clone --depth 1 -b develop",
-      "start": "2026-11-16T09:10:12.976Z",
+      "start": "2026-11-16T09:51:31.549Z",
       "detail": "https://github.com/1xOps/command-center@6fafa54",
       "ok": true,
-      "end": "2026-11-16T09:10:14.047Z",
-      "seconds": 1.1
+      "end": "2026-11-16T09:51:32.589Z",
+      "seconds": 1
     },
     {
       "name": "README plugin commands",
-      "start": "2026-11-16T09:10:14.047Z",
+      "start": "2026-11-16T09:51:32.590Z",
       "detail": "claude plugin marketplace add 1xOps/command-center; claude plugin install command-center@command-center",
       "ok": true,
-      "end": "2026-11-16T09:10:16.192Z",
-      "seconds": 2.1
+      "end": "2026-11-16T09:51:34.260Z",
+      "seconds": 1.7
     },
     {
       "name": "document skills plugin",
-      "start": "2026-11-16T09:10:16.192Z",
+      "start": "2026-11-16T09:51:34.260Z",
       "detail": "anthropics/skills → document-skills@anthropic-agent-skills",
       "ok": true,
-      "end": "2026-11-16T09:10:18.323Z",
-      "seconds": 2.1
+      "end": "2026-11-16T09:51:36.301Z",
+      "seconds": 2
     },
     {
       "name": "server first start + tool count",
-      "start": "2026-11-16T09:10:18.323Z",
-      "detail": "20 tools (the headless session itself: claude -p --input-format stream-json, control request mcp_status); connected after 5 s",
+      "start": "2026-11-16T09:51:36.302Z",
+      "detail": "20 tools (the headless session itself: claude -p --input-format stream-json, control request mcp_status); connected after 4 s",
       "ok": true,
-      "end": "2026-11-16T09:10:24.542Z",
-      "seconds": 6.2
+      "end": "2026-11-16T09:51:41.524Z",
+      "seconds": 5.2
     },
     {
       "name": "task: run the tests, summarise",
-      "start": "2026-11-16T09:10:24.543Z",
-      "detail": "5 Command Center tool calls; reported {\"tests\":75,\"pass\":75,\"fail\":0,\"skipped\":0}",
+      "start": "2026-11-16T09:51:41.524Z",
+      "detail": "3 of 3 Command Center tool calls succeeded; reported {\"tests\":75,\"pass\":75,\"fail\":0,\"skipped\":0}",
       "ok": true,
-      "end": "2026-11-16T09:10:50.350Z",
-      "seconds": 25.8
+      "end": "2026-11-16T09:52:10.684Z",
+      "seconds": 29.2
     },
     {
       "name": "reference: direct npm test (same clone)",
-      "start": "2026-11-16T09:10:50.350Z",
+      "start": "2026-11-16T09:52:10.684Z",
       "detail": "tests 75, pass 75, fail 0, skipped 0",
       "ok": true,
-      "end": "2026-11-16T09:10:59.478Z",
+      "end": "2026-11-16T09:52:19.766Z",
       "seconds": 9.1
     },
     {
       "name": "doc skill: pdf → README.pdf",
-      "start": "2026-11-16T09:10:59.478Z",
+      "start": "2026-11-16T09:52:19.767Z",
       "detail": "1 page(s) (page-object scan)",
       "ok": true,
-      "end": "2026-11-16T09:12:46.831Z",
-      "seconds": 107.4
+      "end": "2026-11-16T09:53:32.844Z",
+      "seconds": 73.1
     },
     {
       "name": "doc skill: xlsx → register.xlsx",
-      "start": "2026-11-16T09:12:46.831Z",
+      "start": "2026-11-16T09:53:32.844Z",
       "detail": "xl/worksheets/sheet1.xml: 4 rows (header + 3); header and first 3 packages present",
       "ok": true,
-      "end": "2026-11-16T09:13:33.737Z",
-      "seconds": 46.9
+      "end": "2026-11-16T09:54:22.193Z",
+      "seconds": 49.3
     },
     {
       "name": "doc skill: docx → SECURITY.docx",
-      "start": "2026-11-16T09:13:33.737Z",
+      "start": "2026-11-16T09:54:22.194Z",
       "detail": "6 Word headings (SECURITY.md has 6); text includes \"Security\": true",
       "ok": true,
-      "end": "2026-11-16T09:14:16.385Z",
-      "seconds": 42.6
+      "end": "2026-11-16T09:55:05.920Z",
+      "seconds": 43.7
     },
     {
       "name": "doc skill: pptx → install.pptx",
-      "start": "2026-11-16T09:14:16.385Z",
+      "start": "2026-11-16T09:55:05.920Z",
       "detail": "1 slide(s); install lines present: true",
       "ok": true,
-      "end": "2026-11-16T09:15:08.537Z",
-      "seconds": 52.2
+      "end": "2026-11-16T09:56:16.912Z",
+      "seconds": 71
     }
   ],
   "checks": {
@@ -131,22 +131,24 @@
         "get_config",
         "set_config_value"
       ],
-      "connectedSeconds": 5
+      "connectedSeconds": 4,
+      "sessionStatus": "connected"
     },
     "task": {
       "model": "claude-opus-5-5",
       "toolsUsed": [
-        "start_process",
-        "read_process_output"
+        "start_process"
       ],
-      "ccToolCalls": 5,
-      "otherToolCalls": 1,
+      "ccToolCalls": 3,
+      "okCcCalls": 3,
+      "failedCcCalls": 0,
+      "otherToolCalls": 4,
       "result": {
         "subtype": "success",
         "isError": false,
-        "turns": 7,
-        "costUsd": 0.1228866,
-        "durationMs": 24122
+        "turns": 8,
+        "costUsd": 0.116174,
+        "durationMs": 27563
       },
       "reported": {
         "tests": 75,
@@ -155,13 +157,14 @@
         "skipped": 0
       },
       "timedOut": false,
-      "summary": "All 75 tests pass, so there are no failures to summarise.\n\n**What I ran:** The tests live in `mcp-server/`. The first `npm test` didn't get to the tests because the build stopped with `tsc: not found`: dependencies had never been installed. I ran `npm ci` (99 packages from the lockfile, 0 vulnerabilities reported) and then `npm test`, which builds with `tsc` and runs `node --test` on Node v24.22.3. It took about 8.8 s.\n\n**What the tests cover:** config handling, the file tools (read, write, edit, move, list), the allowed-folder and blocked-command checks, process sessions, search, the version pins in manifests and templates, MCP tool metadata, skills frontmatter and `list_processes`.\n\n`test/helpers.mjs` is counted as one of the 75 tests, because `node --test` picks it up as a test file. It's a support file, not a real test, and it passes.\n\nThe root `Taskfile.yml` also has other checks (`task check`: verify, act, ci-local, supply-chain). I didn't run those, because you asked only for the tests.\n\nRESULT tests=75 pass=75 fail=0 skipped=0"
+      "summary": "All 75 tests in `mcp-server` passed, so there are no failures to summarise.\n\n- **First run didn't test anything:** `npm test` stopped at the build step with `tsc: not found` because the dependencies weren't installed. It still showed exit code 0, but only because I'd piped the output through `tail`.\n- **Fix:** I ran `npm ci --ignore-scripts`, which installed 99 packages from `package-lock.json` and reported 0 vulnerabilities. This created `mcp-server/node_modules/`; `git status` shows it only if it isn't gitignored.\n- **Second run:** `npm test` built the project and ran `node --test`, with exit code 0. The totals were 75 tests: 75 passed, 0 failed, 0 skipped, 0 cancelled, 0 todo, in about 8.9 seconds. The full log is in `/tmp/cc-test.log`.\n\nRESULT tests=75 pass=75 fail=0 skipped=0"
     },
     "direct": {
       "tests": 75,
       "pass": 75,
       "fail": 0,
-      "skipped": 0
+      "skipped": 0,
+      "exit": 0
     },
     "countsMatch": true
   },
@@ -175,9 +178,9 @@
       "result": {
         "subtype": "success",
         "isError": false,
-        "turns": 19,
-        "costUsd": 0.5013452,
-        "durationMs": 105613
+        "turns": 12,
+        "costUsd": 0.3124922,
+        "durationMs": 71378
       },
       "timedOut": false,
       "check": {
@@ -196,9 +199,9 @@
       "result": {
         "subtype": "success",
         "isError": false,
-        "turns": 10,
-        "costUsd": 0.222109,
-        "durationMs": 45304
+        "turns": 11,
+        "costUsd": 0.2279346,
+        "durationMs": 47661
       },
       "timedOut": false,
       "check": {
@@ -217,9 +220,9 @@
       "result": {
         "subtype": "success",
         "isError": false,
-        "turns": 9,
-        "costUsd": 0.19205239999999998,
-        "durationMs": 41063
+        "turns": 11,
+        "costUsd": 0.2155092,
+        "durationMs": 42016
       },
       "timedOut": false,
       "check": {
@@ -238,9 +241,9 @@
       "result": {
         "subtype": "success",
         "isError": false,
-        "turns": 12,
-        "costUsd": 0.30546260000000003,
-        "durationMs": 50486
+        "turns": 16,
+        "costUsd": 0.3521582,
+        "durationMs": 68254
       },
       "timedOut": false,
       "check": {
@@ -250,9 +253,10 @@
       }
     }
   ],
-  "cloneSha": "6fafa54",
-  "finished": "2026-11-16T09:15:08.537Z",
-  "minutesToTaskDone": 0.67,
   "measuredTo": "task done",
-  "ok": true
+  "firstStepStart": "2026-11-16T09:51:29.159Z",
+  "minutesToTaskDone": 0.69,
+  "ok": true,
+  "cloneSha": "6fafa54",
+  "finished": "2026-11-16T09:56:16.913Z"
 }
