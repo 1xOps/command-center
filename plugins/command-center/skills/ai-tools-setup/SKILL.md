@@ -1,6 +1,6 @@
 ---
 name: ai-tools-setup
-description: Installs, connects, checks and repairs MCP servers (Command Center or others) in Claude Code, Claude Desktop, OpenAI Codex and VS Code, with config locations for macOS, Linux and Windows and a repeatable proof that the server answers. Use when the person wants to add an MCP server or asks why a server is missing or its tools fail.
+description: Installs, connects, checks and repairs MCP servers (Command Center or others) in Claude Desktop, Claude Code, OpenAI Codex and VS Code, with config locations for macOS, Linux and Windows and a repeatable proof that the server answers. Use when the person wants to add an MCP server or asks why a server is missing or its tools fail.
 ---
 
 # Set up and repair AI tool connections
@@ -11,8 +11,8 @@ Work in three steps: **find** the client's config, **change** it only with the p
 
 | Client | Where MCP servers are configured | Command line |
 |---|---|---|
-| Claude Code | `.mcp.json` in the project (team), or `~/.claude.json` (personal) | `claude mcp list`, `claude mcp add` |
 | Claude Desktop | Settings → Extensions (`.mcpb` bundles), or `claude_desktop_config.json` (see `references/claude-desktop.md`) | none |
+| Claude Code | `.mcp.json` in the project (team), or `~/.claude.json` (personal) | `claude mcp list`, `claude mcp add` |
 | OpenAI Codex | `~/.codex/config.toml`, section `[mcp_servers.<name>]` | `codex mcp list`, `codex mcp add` |
 | VS Code | `.vscode/mcp.json` (`servers`) or the user profile | `MCP: List Servers` command |
 
