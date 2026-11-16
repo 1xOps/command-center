@@ -1,6 +1,6 @@
 # Command Center plugin (Claude Code)
 
-Installs the 1xOps Command Center MCP server, pinned to `@1xops/command-center@0.4.1`, and six skills that teach the agent to use it well.
+Installs the 1xOps Command Center MCP server, pinned to `@1xops/command-center@0.4.2`, and six skills that teach the agent to use it well.
 
 ```
 /plugin marketplace add 1xOps/command-center
