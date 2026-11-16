@@ -9,16 +9,18 @@ CLIENT=${CLIENT:-claude}
 REPO=$(cd .. && pwd)
 OUT="$REPO/tmp/install-smoke/linux-$CLIENT"
 mkdir -p "$OUT"
+# A path given as ~/… (zsh does not expand ~ after `NAME=` in a task argument) is resolved here.
+abs() { case "$1" in "~/"*) printf "%s/%s" "$HOME" "${1#\~/}";; *) printf "%s" "$1";; esac; }
 set -- --rm --init -v "$REPO:/repo:ro" -v "$OUT:/out"
-[ -n "${ENV_FILE:-}" ] && set -- "$@" --env-file "$ENV_FILE"
+[ -n "${ENV_FILE:-}" ] && set -- "$@" --env-file "$(abs "$ENV_FILE")"
 EXTRA=""
 if [ "$CLIENT" = codex ]; then
   : "${CODEX_AUTH:?set CODEX_AUTH to the Codex auth.json}"
-  set -- "$@" -v "$CODEX_AUTH:/codex-auth.json:ro"
+  set -- "$@" -v "$(abs "$CODEX_AUTH"):/codex-auth.json:ro"
   EXTRA="--codex-auth /codex-auth.json --codex-bypass"   # bypass only inside this throwaway container
 fi
 exec docker run "$@" node:24-slim sh -c "
   set -eu
   apt-get update -qq >/dev/null && apt-get install -y -qq --no-install-recommends git ca-certificates >/dev/null
-  node /repo/mcp-server/scripts/install-smoke.mjs --client $CLIENT --out /out/run $EXTRA \$*
+  node /repo/mcp-server/scripts/install-smoke.mjs --client $CLIENT --isolate --out /out/run $EXTRA \$*
 " sh ${CLI_ARGS:-}

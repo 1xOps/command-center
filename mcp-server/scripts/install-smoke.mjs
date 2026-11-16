@@ -47,6 +47,8 @@ const OUT = path.resolve(opt('--out', `install-smoke-${client}`));
 const NO_MODEL = flag('--no-model');
 const DO_DOCS = client === 'claude' && !NO_MODEL && !flag('--skip-docs');
 const TIMEOUT = Number(opt('--timeout-min', '15')) * 60_000;
+if (!(TIMEOUT > 0)) die('--timeout-min must be a positive number');
+if (opt('--codex-auth') && !flag('--isolate')) die('--codex-auth needs --isolate, so the real ~/.codex/auth.json is never overwritten');
 const WIN = process.platform === 'win32';
 
 fs.rmSync(OUT, { recursive: true, force: true });
@@ -67,6 +69,9 @@ env.CODEX_HOME = path.join(WIN ? env.USERPROFILE ?? HOME : HOME, '.codex');
 const binDir = WIN ? env.npm_config_prefix : path.join(env.npm_config_prefix, 'bin');
 env.PATH = `${binDir}${path.delimiter}${env.PATH ?? env.Path ?? ''}`;
 if (WIN) delete env.Path;
+// Only the model sessions get the credentials; installs, git, npm ci/test and the MCP handshake do not.
+const SECRET_KEYS = ['ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN', 'OPENAI_API_KEY'];
+const plainEnv = Object.fromEntries(Object.entries(env).filter(([k]) => !SECRET_KEYS.includes(k)));
 
 const result = { client, started: utc(), host: { platform: process.platform, release: os.release(), arch: process.arch, node: process.version, isolated: flag('--isolate'), runner: process.env.RUNNER_OS ?? null }, pins: { client: PINS[client] }, noModel: NO_MODEL, steps: [], checks: {}, docs: [] };
 const CLONE = path.join(OUT, 'work', 'command-center');
@@ -75,9 +80,10 @@ const CLONE = path.join(OUT, 'work', 'command-center');
 function utc() { return new Date().toISOString(); }
 function die(m) { console.error(m); process.exit(2); }
 function log(name, text) { fs.appendFileSync(path.join(OUT, 'logs', `${name}.log`), redact(text)); }
-function run(cmd, args, { cwd = OUT, input, timeout = 20 * 60_000, name, shell = false } = {}) {
+function run(cmd, args, { cwd = OUT, input, timeout = 20 * 60_000, name, secrets = false } = {}) {
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { cwd, env, shell, windowsHide: true });
+    const child = spawn(cmd, args, { cwd, env: secrets ? env : plainEnv, windowsHide: true });
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     let out = '', err = '';
     const timer = setTimeout(() => { err += `\n[timeout after ${timeout / 1000}s]`; child.kill(); }, timeout);
     child.stdout.on('data', (d) => (out += d));
@@ -98,6 +104,7 @@ async function step(name, fn) {
   try { s.detail = await fn(); s.ok = true; } catch (e) { s.ok = false; s.error = redact(String(e?.message ?? e)).slice(0, 1500); }
   s.end = utc(); s.seconds = +((performance.now() - t0) / 1000).toFixed(1);
   result.steps.push(s);
+  writeResult();
   console.log(`${s.ok ? 'PASS' : 'FAIL'}  ${name.padEnd(34)} ${String(s.seconds).padStart(7)} s  ${s.end}${s.ok ? '' : `  ${s.error.split('\n')[0]}`}`);
   return s;
 }
@@ -109,19 +116,25 @@ function npmCli() {
   return hit;
 }
 const NPM = npmCli();
-result.host.npm = spawnSync(process.execPath, [NPM, '--version'], { env, encoding: 'utf8' }).stdout?.trim() ?? null;
+result.host.npm = spawnSync(process.execPath, [NPM, '--version'], { env: plainEnv, encoding: 'utf8' }).stdout?.trim() ?? null;
 const npm = (args, o) => must(process.execPath, [NPM, ...args], o);
 const testCounts = (text) => Object.fromEntries(['tests', 'pass', 'fail', 'skipped'].map((k) => [k, Number(new RegExp(`ℹ ${k} (\\d+)`).exec(text)?.[1] ?? NaN)]));
 const resultLine = (text) => { const m = /RESULT tests=(\d+) pass=(\d+) fail=(\d+) skipped=(\d+)/.exec(text ?? ''); return m && { tests: +m[1], pass: +m[2], fail: +m[3], skipped: +m[4] }; };
 
-// MCP handshake on a stdio command: initialize → initialized → tools/list. Used for Codex and as the
-// Claude fallback; `shell` on Windows because the command is usually `npx` (a .cmd shim).
+// MCP handshake on a stdio command: initialize → initialized → tools/list. Used for Codex, and for Claude
+// only as a diagnostic when the session does not connect. `npx` runs as node + npx-cli.js (no shell), so on
+// Windows no cmd.exe sits between us and the server and kill() stops the server itself.
 function mcpToolsList(command, args, cwd) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, env, shell: WIN, windowsHide: true });
-    let buf = '', err = '';
-    const timer = setTimeout(() => { child.kill(); reject(new Error(`tools/list timed out; stderr: ${err.slice(-400)}`)); }, 180_000);
-    const send = (o) => child.stdin.write(`${JSON.stringify(o)}\n`);
+    const [cmd, lead] = command === 'npx' ? [process.execPath, [path.join(path.dirname(NPM), 'npx-cli.js')]] : [command, []];
+    const child = spawn(cmd, [...lead, ...args], { cwd, env: plainEnv, windowsHide: true });
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
+    let buf = '', err = '', settled = false;
+    const settle = (fn, v) => { if (settled) return; settled = true; clearTimeout(timer); child.kill(); fn(v); };
+    const timer = setTimeout(() => settle(reject, new Error(`tools/list timed out; stderr: ${err.slice(-400)}`)), 180_000);
+    const send = (o) => { try { child.stdin.write(`${JSON.stringify(o)}\n`); } catch {} };
+    child.stdin.on('error', () => {});
+    child.on('close', (code) => settle(reject, new Error(`server exited (${code}) before tools/list; stderr: ${err.slice(-400)}`)));
     child.stderr.on('data', (d) => (err += d));
     child.stdout.on('data', (d) => {
       buf += d;
@@ -129,10 +142,11 @@ function mcpToolsList(command, args, cwd) {
         const line = buf.slice(0, i); buf = buf.slice(i + 1);
         let m; try { m = JSON.parse(line); } catch { continue; }
         if (m.id === 1) { send({ jsonrpc: '2.0', method: 'notifications/initialized' }); send({ jsonrpc: '2.0', id: 2, method: 'tools/list' }); }
-        if (m.id === 2) { clearTimeout(timer); child.kill(); resolve(m.result.tools.map((t) => t.name)); }
+        if ((m.id === 1 || m.id === 2) && (m.error || !m.result)) return settle(reject, new Error(`JSON-RPC error on ${m.id === 1 ? 'initialize' : 'tools/list'}: ${JSON.stringify(m.error ?? m).slice(0, 300)}`));
+        if (m.id === 2) settle(resolve, (m.result.tools ?? []).map((t) => t.name));
       }
     });
-    child.on('error', (e) => { clearTimeout(timer); reject(e); });
+    child.on('error', (e) => settle(reject, e));
     send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'install-smoke', version: '1' } } });
   });
 }
@@ -146,16 +160,18 @@ function claudeSession({ bin, cwd, prompt, allowed = [], disallowed = [], name }
     if (disallowed.length) args.push('--disallowedTools', disallowed.join(','));
     const child = spawn(bin, args, { cwd, env, windowsHide: true });
     const t0 = performance.now();
-    const r = { tools: [], toolUses: [], skills: [], mcpConnectedSeconds: null, mcpStatus: null, result: null, model: null, stderr: '' };
-    let buf = '', sent = false, polls = 0, done = false;
+    const r = { tools: [], toolUses: [], toolResults: [], skills: [], mcpConnectedSeconds: null, mcpStatus: null, result: null, model: null, stderr: '' };
+    const ids = new Map(); // tool_use id → tool name, to read each call's result
+    let buf = '', all = '', sent = false, polls = 0, done = false;
     const send = (o) => { try { child.stdin.write(`${JSON.stringify(o)}\n`); } catch {} };
     const finish = () => { if (done) return; done = true; clearInterval(poll); clearTimeout(timer); try { child.stdin.end(); } catch {} setTimeout(() => child.kill(), 5000).unref(); };
     const timer = setTimeout(() => { r.timedOut = true; finish(); }, TIMEOUT);
     child.on('error', (e) => { r.stderr += `[spawn error] ${e.message}`; });
     child.stdin.on('error', () => {});
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     child.stderr.on('data', (d) => (r.stderr += d));
     child.stdout.on('data', (d) => {
-      buf += d; log(name, d.toString());
+      buf += d; all += d;
       for (let i; (i = buf.indexOf('\n')) >= 0;) {
         const line = buf.slice(0, i); buf = buf.slice(i + 1);
         let e; try { e = JSON.parse(line); } catch { continue; }
@@ -171,11 +187,12 @@ function claudeSession({ bin, cwd, prompt, allowed = [], disallowed = [], name }
             if (prompt) send({ type: 'user', message: { role: 'user', content: prompt } }); else finish();
           } else if (['failed', 'needs-auth', 'disabled'].includes(srv?.status) || polls > 180) { r.mcpFailed = true; finish(); }
         }
-        if (e.type === 'assistant') for (const c of e.message?.content ?? []) if (c.type === 'tool_use') { r.toolUses.push(c.name); if (c.name === 'Skill') r.skills.push(c.input?.skill ?? c.input?.command ?? '?'); }
+        if (e.type === 'assistant') for (const c of e.message?.content ?? []) if (c.type === 'tool_use') { r.toolUses.push(c.name); ids.set(c.id, c.name); if (c.name === 'Skill') r.skills.push(c.input?.skill ?? c.input?.command ?? '?'); }
+        if (e.type === 'user' && Array.isArray(e.message?.content)) for (const c of e.message.content) if (c.type === 'tool_result') r.toolResults.push({ name: ids.get(c.tool_use_id) ?? '?', isError: c.is_error === true });
         if (e.type === 'result') { r.result = { subtype: e.subtype, isError: e.is_error, turns: e.num_turns, costUsd: e.total_cost_usd, durationMs: e.duration_ms, text: e.result }; finish(); }
       }
     });
-    child.on('close', (code) => { r.exit = code; r.seconds = +((performance.now() - t0) / 1000).toFixed(1); log(name, `\n--- stderr\n${r.stderr}`); finish(); resolve(r); });
+    child.on('close', (code) => { r.exit = code; r.seconds = +((performance.now() - t0) / 1000).toFixed(1); log(name, `${all}\n--- stderr\n${r.stderr}`); finish(); resolve(r); });
     send({ type: 'control_request', request_id: 'init', request: { subtype: 'initialize' } });
     const poll = setInterval(() => { polls++; send({ type: 'control_request', request_id: `s${polls}`, request: { subtype: 'mcp_status' } }); }, 1000);
   });
@@ -221,14 +238,15 @@ if (client === 'claude') {
   });
   await step('server first start + tool count', async () => {
     const s = await claudeSession({ bin: clientCmd[0], cwd: CLONE, prompt: null, name: 'tools' });
-    let method = 'the headless session itself: claude -p --input-format stream-json, control request mcp_status';
-    let tools = s.tools;
-    if (!tools.length) {
-      method = `fallback MCP tools/list on the plugin command (session status: ${s.mcpStatus})`;
+    const method = 'the headless session itself: claude -p --input-format stream-json, control request mcp_status';
+    result.checks.tools = { count: s.tools.length, method, names: s.tools, connectedSeconds: s.mcpConnectedSeconds, sessionStatus: s.mcpStatus };
+    if (s.mcpStatus !== 'connected') {
+      // Diagnostic only: does the server itself answer? The step still fails, because the session did not connect.
       const cfg = JSON.parse(fs.readFileSync(path.join(CLONE, 'plugins', 'command-center', '.mcp.json'), 'utf8')).mcpServers['command-center'];
-      tools = await mcpToolsList(cfg.command, cfg.args, CLONE);
+      result.checks.tools.diagnostic = await mcpToolsList(cfg.command, cfg.args, CLONE).then((t) => `server alone answers with ${t.length} tools`, (e) => `server alone fails too: ${e.message}`);
+      throw new Error(`the session reports the plugin server as ${s.mcpStatus} (${result.checks.tools.diagnostic})`);
     }
-    result.checks.tools = { count: tools.length, method, names: tools, connectedSeconds: s.mcpConnectedSeconds };
+    const tools = s.tools;
     if (tools.length !== 20) throw new Error(`${tools.length} tools, expected 20`);
     return `${tools.length} tools (${method}); connected after ${s.mcpConnectedSeconds ?? '?'} s`;
   });
@@ -262,15 +280,16 @@ if (!NO_MODEL) {
       const s = await claudeSession({ bin: clientCmd[0], cwd: CLONE, prompt: TASK.claude, allowed: ['mcp__plugin_command-center_command-center', 'Read', 'Glob', 'Grep'], disallowed: ['Bash', 'Write', 'Edit'], name: 'task' });
       const cc = s.toolUses.filter((n) => n.startsWith(CC_PREFIX.claude)).map((n) => n.slice(CC_PREFIX.claude.length));
       agentCounts = resultLine(s.result?.text);
-      result.checks.task = { model: s.model, toolsUsed: [...new Set(cc)], ccToolCalls: cc.length, otherToolCalls: s.toolUses.length - cc.length, result: s.result && { ...s.result, text: undefined }, reported: agentCounts, timedOut: !!s.timedOut, summary: s.result?.text?.slice(-1200) };
+      const ccResults = s.toolResults.filter((t) => t.name.startsWith(CC_PREFIX.claude));
+      result.checks.task = { model: s.model, toolsUsed: [...new Set(cc)], ccToolCalls: cc.length, okCcCalls: ccResults.filter((t) => !t.isError).length, failedCcCalls: ccResults.filter((t) => t.isError).length, otherToolCalls: s.toolUses.length - cc.length, result: s.result && { ...s.result, text: undefined }, reported: agentCounts, timedOut: !!s.timedOut, summary: s.result?.text?.slice(-1200) };
       if (!s.result || s.result.isError || s.result.subtype !== 'success') throw new Error(`session ended ${s.timedOut ? 'by timeout' : s.result?.subtype ?? `with exit ${s.exit}`}`);
-      if (!cc.length) throw new Error('no Command Center tool was used');
+      if (!result.checks.task.okCcCalls) throw new Error(`no Command Center tool call succeeded (${cc.length} made)`);
     } else {
       // codex exec never prompts, so an unapproved MCP call is rejected ("requires approval, while the approval
       // policy is set to `never`", measured 2026-11-16 on 0.169.0). Approve this one server's tools, nothing else.
       const approve = ['-c', `mcp_servers.${CC_PREFIX.codex}.default_tools_approval_mode="approve"`];
       const sandbox = flag('--codex-bypass') ? ['--dangerously-bypass-approvals-and-sandbox'] : ['-s', 'workspace-write', ...approve];
-      const r = await run(clientCmd[0], [...clientCmd.slice(1), 'exec', '--json', '--skip-git-repo-check', ...sandbox, '-C', CLONE, '-'], { cwd: CLONE, input: TASK.codex, timeout: TIMEOUT, name: 'task' });
+      const r = await run(clientCmd[0], [...clientCmd.slice(1), 'exec', '--json', '--skip-git-repo-check', ...sandbox, '-C', CLONE, '-'], { cwd: CLONE, input: TASK.codex, timeout: TIMEOUT, name: 'task', secrets: true });
       const ev = r.out.split('\n').flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
       const items = ev.filter((e) => e.type === 'item.completed').map((e) => e.item);
       const mcp = items.filter((i) => i.type === 'mcp_tool_call');
@@ -281,7 +300,8 @@ if (!NO_MODEL) {
       if (r.code !== 0 || failed) throw new Error(`codex exec exited ${r.code}${failed ? `: ${JSON.stringify(failed).slice(0, 300)}` : ''}`);
       if (!result.checks.task.okCcCalls) throw new Error(`no Command Center tool call succeeded (${result.checks.task.ccToolCalls} made)`);
     }
-    return `${result.checks.task.ccToolCalls} Command Center tool calls; reported ${JSON.stringify(agentCounts)}`;
+    if (!agentCounts) throw new Error('the reply has no RESULT line, so its counts cannot be checked');
+    return `${result.checks.task.okCcCalls} of ${result.checks.task.ccToolCalls} Command Center tool calls succeeded; reported ${JSON.stringify(agentCounts)}`;
   });
 }
 
@@ -291,8 +311,9 @@ await step('reference: direct npm test (same clone)', async () => {
   if (!fs.existsSync(path.join(cwd, 'node_modules'))) await npm(['ci', '--no-audit', '--no-fund'], { cwd, name: 'direct-test' });
   const r = await run(process.execPath, [NPM, 'test'], { cwd, name: 'direct-test' });
   const c = testCounts(r.out);
-  result.checks.direct = c;
-  if (agentCounts) {
+  result.checks.direct = { ...c, exit: r.code };
+  if (Object.values(c).some(Number.isNaN)) throw new Error(`could not read the test counts from npm test (exit ${r.code})`);
+  if (agentCounts) { // a task without a RESULT line has already failed its own step
     result.checks.countsMatch = ['tests', 'pass', 'fail', 'skipped'].every((k) => agentCounts[k] === c[k]);
     if (!result.checks.countsMatch) throw new Error(`agent reported ${JSON.stringify(agentCounts)}, npm test says ${JSON.stringify(c)}`);
   }
@@ -306,6 +327,7 @@ if (DO_DOCS) for (const d of DOCS) {
     const entry = { skill: d.skill, file: d.file, skillsInvoked: s.skills, result: s.result && { ...s.result, text: undefined }, timedOut: !!s.timedOut };
     result.docs.push(entry);
     if (!s.result || s.result.isError) throw new Error(`session ended ${s.timedOut ? 'by timeout' : s.result?.subtype ?? `with exit ${s.exit}`}`);
+    if (!s.skills.includes(`document-skills:${d.skill}`)) throw new Error(`document-skills:${d.skill} was not invoked (skills: ${s.skills.join(', ') || 'none'})`);
     if (!fs.existsSync(file)) throw new Error(`${d.file} was not written`);
     entry.check = inspect(d.skill, file);
     if (!entry.check.ok) throw new Error(entry.check.detail);
@@ -314,17 +336,28 @@ if (DO_DOCS) for (const d of DOCS) {
 }
 
 // ---- Result -----------------------------------------------------------------------------------------
+if (opt('--codex-auth')) {
+  const copy = path.join(env.CODEX_HOME, 'auth.json');
+  result.codexAuthRefreshAfter = JSON.parse(fs.readFileSync(copy, 'utf8')).last_refresh ?? null;
+  fs.rmSync(copy, { force: true }); // the copied sign-in is not left behind
+}
 result.finished = utc();
-const first = result.steps[0];
-const taskDone = result.steps.find((s) => s.name.startsWith('task:')) ?? result.steps.find((s) => s.name.startsWith('server first start'));
-result.minutesToTaskDone = first && taskDone ? +((Date.parse(taskDone.end) - Date.parse(first.start)) / 60000).toFixed(2) : null;
-result.measuredTo = NO_MODEL ? 'tool count (--no-model)' : 'task done';
-result.ok = result.steps.every((s) => s.ok);
-if (opt('--codex-auth')) result.codexAuthRefreshAfter = JSON.parse(fs.readFileSync(path.join(env.CODEX_HOME, 'auth.json'), 'utf8')).last_refresh ?? null;
-// Local paths stay out of the evidence: the run folder is written as <out>.
-fs.writeFileSync(path.join(OUT, 'result.json'), redact(JSON.stringify(result, null, 2)).split(JSON.stringify(OUT).slice(1, -1)).join('<out>'));
+writeResult();
 console.log(`\n${result.ok ? 'PASS' : 'FAIL'}  ${client} on ${process.platform}: ${result.minutesToTaskDone} min from start to ${result.measuredTo}; ${path.join(OUT, 'result.json')}`);
 process.exit(result.ok ? 0 : 1);
+
+// Written after every step, so a crash or a cancelled job still leaves the evidence so far.
+function writeResult() {
+  const first = result.steps[0];
+  const name = NO_MODEL ? 'server first start' : 'task:';
+  const done = result.steps.find((s) => s.name.startsWith(name));
+  result.measuredTo = NO_MODEL ? 'tool count (--no-model)' : 'task done';
+  result.firstStepStart = first?.start ?? null;
+  result.minutesToTaskDone = first && done?.ok ? +((Date.parse(done.end) - Date.parse(first.start)) / 60000).toFixed(2) : null;
+  result.ok = result.steps.length > 0 && result.steps.every((s) => s.ok);
+  // Local paths stay out of the evidence: the run folder is written as <out>.
+  fs.writeFileSync(path.join(OUT, 'result.json'), redact(JSON.stringify(result, null, 2)).split(JSON.stringify(OUT).slice(1, -1)).join('<out>'));
+}
 
 // ---- File checks: reopen each built file without dependencies -----------------------------------------
 function unzip(file) {
@@ -369,12 +402,12 @@ function inspect(kind, file) {
       const headings = (xml.match(/<w:pStyle w:val="(?:Heading\d|Title)"/g) ?? []).length;
       const md = (fs.readFileSync(path.join(CLONE, 'mcp-server', 'SECURITY.md'), 'utf8').match(/^#{1,3} /gm) ?? []).length;
       const hasTitle = xmlText(xml).some((t) => t.includes('Security'));
-      return { ok: headings >= 1 && hasTitle, headings, markdownHeadings: md, detail: `${headings} Word headings (SECURITY.md has ${md}); text includes "Security": ${hasTitle}` };
+      return { ok: headings >= md && md > 0 && hasTitle, headings, markdownHeadings: md, detail: `${headings} Word headings (SECURITY.md has ${md}); text includes "Security": ${hasTitle}` };
     }
     if (kind === 'pptx') {
       const slides = [...z.keys()].filter((k) => /^ppt\/slides\/slide\d+\.xml$/.test(k));
       const text = slides.map((s) => xmlText(z.get(s)).join(' ')).join(' ');
-      const hasInstall = text.includes('/plugin install') || text.includes('@1xops/command-center@');
+      const hasInstall = text.includes('/plugin install') && text.includes('@1xops/command-center@');
       return { ok: slides.length === 1 && hasInstall, slides: slides.length, detail: `${slides.length} slide(s); install lines present: ${hasInstall}` };
     }
   } catch (e) { return { ok: false, detail: `cannot reopen ${path.basename(file)}: ${e.message}` }; }
@@ -389,16 +422,16 @@ function report(files) {
   const min = (s) => (s ? `${(s.seconds / 60).toFixed(2)}${s.ok ? '' : ' ✖'}` : '—');
   const find = (r, p) => r.steps.find((s) => s.name.startsWith(p));
   console.log('# Install smoke test results\n\nGenerated by `task mcp:install-smoke:report` from the result files in this folder; do not edit by hand. Re-run a leg with `task mcp:install-smoke`, `task mcp:install-smoke:linux` or the `Install smoke · Windows` workflow.\n');
-  console.log('| OS | Client | Install client | Clone | README install | Server start + tools | Task | **Minutes to task done** | UTC |');
-  console.log('|---|---|--:|--:|--:|--:|--:|--:|---|');
-  for (const r of rs) console.log(`| ${osName(r)}${r.host.isolated ? ' (fresh HOME)' : ''} | ${r.pins.clientVersion ?? r.pins.client} | ${min(r.steps[0])} | ${min(find(r, 'git clone'))} | ${min(find(r, 'README'))} | ${min(find(r, 'server first start'))} | ${min(find(r, 'task:'))} | **${r.minutesToTaskDone ?? '—'}**${r.measuredTo === 'task done' ? '' : ` (to ${r.measuredTo})`} | ${r.started} → ${(find(r, 'task:') ?? find(r, 'server first start'))?.end ?? r.finished} |`);
+  console.log('| OS | Client | Run | Install client | Clone | README install | Server start + tools | Task | **Minutes to task done** | UTC |');
+  console.log('|---|---|---|--:|--:|--:|--:|--:|--:|---|');
+  for (const r of rs) console.log(`| ${osName(r)}${r.host.isolated ? ' (fresh HOME)' : ''} | ${r.pins.clientVersion ?? r.pins.client} | ${r.ok ? 'PASS' : `FAIL (${r.steps.filter((s) => !s.ok).map((s) => s.name).join('; ')})`} | ${min(r.steps[0])} | ${min(find(r, 'git clone'))} | ${min(find(r, 'README'))} | ${min(find(r, 'server first start'))} | ${min(find(r, 'task:'))} | ${r.minutesToTaskDone == null ? '— (task not done)' : `**${r.minutesToTaskDone}**`}${r.measuredTo === 'task done' ? '' : ` (to ${r.measuredTo})`} | ${r.firstStepStart ?? r.started} → ${(find(r, 'task:') ?? find(r, 'server first start'))?.end ?? r.finished} |`);
   console.log('\n| OS | Client | Tools (method) | Task: Command Center tools used | Agent counts = `npm test` | Doc files |');
   console.log('|---|---|---|---|---|---|');
   for (const r of rs) {
     const t = r.checks.task;
     const d = r.checks.direct;
     const docs = r.docs.length ? r.docs.map((x) => `${x.skill}: ${x.check?.detail ?? 'not built'}`).join('<br>') : '—';
-    console.log(`| ${osName(r)} | ${r.client} | ${r.checks.tools?.count ?? '—'} (${r.checks.tools?.method ?? 'not measured'}) | ${t ? `${t.ccToolCalls} calls: ${t.toolsUsed.join(', ')}` : '—'} | ${d ? `${r.checks.countsMatch === undefined ? 'not compared' : r.checks.countsMatch ? 'match' : 'MISMATCH'}: tests ${d.tests}, pass ${d.pass}, fail ${d.fail}, skipped ${d.skipped}` : '—'} | ${docs} |`);
+    console.log(`| ${osName(r)} | ${r.client} | ${r.checks.tools?.count ?? '—'} (${r.checks.tools?.method ?? 'not measured'}) | ${t ? `${t.okCcCalls ?? '?'} of ${t.ccToolCalls} calls succeeded: ${t.toolsUsed.join(', ')}` : '—'} | ${d ? `${r.checks.countsMatch === undefined ? 'not compared' : r.checks.countsMatch ? 'match' : 'MISMATCH'}: tests ${d.tests}, pass ${d.pass}, fail ${d.fail}, skipped ${d.skipped}` : '—'} | ${docs} |`);
   }
   const withDocs = rs.filter((r) => r.docs.length);
   if (withDocs.length) {
