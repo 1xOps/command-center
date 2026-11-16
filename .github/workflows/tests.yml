@@ -1,6 +1,6 @@
 name: Tests
 
-# The 18 tests on macOS, Linux and Windows. Node 24, no dependencies, no secrets.
+# The tests on macOS, Linux and Windows. Node 24, no dependencies, no secrets.
 on:
   pull_request:
   push:

@@ -4,6 +4,11 @@ import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
+// A connector's own token stays here, keyed by its entry, so it can be probed but is never output.
+const secrets = new WeakMap();
+export const secretOf = (entry) => secrets.get(entry) ?? null;
+export const attachToken = (entry, token) => (token && secrets.set(entry, token), entry);
+
 const readJson = (file) => {
   try { return JSON.parse(readFileSync(file, 'utf8')); } catch { return null; }
 };
@@ -42,7 +47,13 @@ function entries(servers, app, source, env) {
     const raw = server.env?.AWS_PROFILE ?? (args.includes('--profile') ? args[args.indexOf('--profile') + 1] : undefined);
     const profile = vendor === 'aws' ? resolve(raw, env) : null;
     const unset = vendor === 'aws' ? missingVars(raw, env) : [];
-    return { name, app, source, vendor, profile, unset, url: server.url ?? null };
+    const entry = { name, app, source, vendor, profile, unset, url: server.url ?? null };
+    if (vendor === 'github') {
+      const raw = server.env?.GITHUB_PERSONAL_ACCESS_TOKEN ?? server.env?.GITHUB_TOKEN ?? server.headers?.Authorization?.replace(/^Bearer\s+/i, '');
+      const token = resolve(raw, env);
+      attachToken(entry, token);
+    }
+    return entry;
   });
 }
 
@@ -58,7 +69,11 @@ export function codexServers(toml) {
     if (line.startsWith('[')) { current = null; continue; }
     const kv = current && line.match(/^([A-Za-z_][\w-]*)\s*=\s*(.+)$/);
     if (!kv) continue;
-    const value = kv[2].startsWith('[') ? [...kv[2].matchAll(/"([^"]*)"/g)].map((m) => m[1]) : kv[2].replace(/^"(.*)"$/, '$1');
+    const str = (v) => v.trim().replace(/^"(.*)"$|^'(.*)'$/, (_, a, b) => a ?? b);
+    let value;
+    if (kv[2].startsWith('[')) value = [...kv[2].matchAll(/"([^"]*)"|'([^']*)'/g)].map((m) => m[1] ?? m[2]);
+    else if (kv[2].startsWith('{')) value = Object.fromEntries([...kv[2].matchAll(/([A-Za-z_][\w-]*)\s*=\s*("[^"]*"|'[^']*')/g)].map((m) => [m[1], str(m[2])]));
+    else value = str(kv[2]);
     if (inEnv) (current.env ??= {})[kv[1]] = value;
     else current[kv[1]] = value;
   }
@@ -69,7 +84,8 @@ export function discover({ home = os.homedir(), cwd = process.cwd(), env = proce
   const found = [];
   const claudeJson = readJson(path.join(home, '.claude.json'));
   found.push(...entries(claudeJson?.mcpServers, 'Claude Code', '~/.claude.json', env));
-  found.push(...entries(claudeJson?.projects?.[cwd]?.mcpServers, 'Claude Code', '~/.claude.json (this folder)', env));
+  const folder = claudeJson?.projects?.[cwd] ?? claudeJson?.projects?.[cwd.replaceAll('\\', '/')];
+  found.push(...entries(folder?.mcpServers, 'Claude Code', '~/.claude.json (this folder)', env));
   found.push(...entries(readJson(path.join(cwd, '.mcp.json'))?.mcpServers, 'Claude Code', '.mcp.json', env));
 
   // Plugins: only those switched on. Later files win, as in Claude Code: user settings, then this folder's shared and local settings.

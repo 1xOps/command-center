@@ -1,6 +1,6 @@
 {
-  "at": "2026-11-16T20:29:34.960Z",
-  "commit": "ffab8e6",
+  "at": "2026-11-16T20:35:52.474Z",
+  "commit": "486a25c",
   "os": "darwin",
   "folder": "command-center",
   "native": {
@@ -30,7 +30,7 @@
   },
   "commandCenter": {
     "command": "command-center check --json",
-    "checkedAt": "2026-11-16T20:29:58.319Z",
+    "checkedAt": "2026-11-16T20:36:21.166Z",
     "exitCode": 2,
     "connectors": [
       {

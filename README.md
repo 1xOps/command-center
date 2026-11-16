@@ -39,7 +39,7 @@ Access is judged from the AWS role or permission-set name (ReadOnly, ViewOnly, S
 ## Develop
 
 Node 24, no dependencies.
-- `task check` runs the tests (18, covering the six setups: missing profile, expired sign-in, wrong account, write scopes on a read-only job, revoked token, healthy).
+- `task check` runs the tests (22, covering the six setups: missing profile, expired sign-in, wrong account, write scopes on a read-only job, revoked token, healthy).
 - `task connectors` checks this machine.
 - `task evidence` writes the side-by-side JSON.
 
