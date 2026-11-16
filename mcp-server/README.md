@@ -106,4 +106,4 @@ task mcp:release-rehearsal  # what would be published, publishing nothing
 Releases run in CI from a tag `command-center-vX.Y.Z` and publish to npm with provenance (OIDC trusted publishing) only after the owner approves the `release` environment.
 </details>
 
-Apache-2.0 © 2026 1xOps. Dependencies keep their own licences; see the [supply-chain register](https://github.com/1xOps/command-center/blob/develop/docs/supply-chain/register.md).
+Apache-2.0 © 2026 1xOps · earlier versions credited in [NOTICE](NOTICE). Dependencies keep their own licences; see the [supply-chain register](https://github.com/1xOps/command-center/blob/develop/docs/supply-chain/register.md).

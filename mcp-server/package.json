@@ -22,6 +22,8 @@
   "files": [
     "dist",
     "LICENSE",
+    "THIRD-PARTY-NOTICES.md",
+    "NOTICE",
     "icon.png"
   ],
   "scripts": {
