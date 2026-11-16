@@ -21,9 +21,9 @@ Read the file with `command-center:read_file` before proposing any change. Confi
 ## 2 · Change it
 
 - Show the exact lines to add, and add them only after the person agrees.
-- Pin versions (`@1xops/command-center@0.4.1`), never `@latest`, so every machine runs the same code.
+- Pin versions (`@1xops/command-center@0.4.2`), never `@latest`, so every machine runs the same code.
 - Keep JSON valid: after `command-center:write_file` or `command-center:edit_block`, read it back with `node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" <file>`.
-- Command Center's allowed folders come from the launch arguments (`npx -y @1xops/command-center@0.4.1 /path/one /path/two`) or from `~/.command-center/config.json`. Agents cannot change them.
+- Command Center's allowed folders come from the launch arguments (`npx -y @1xops/command-center@0.4.2 /path/one /path/two`) or from `~/.command-center/config.json`. Agents cannot change them.
 
 ## 3 · Prove it works
 

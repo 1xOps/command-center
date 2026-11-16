@@ -35,7 +35,7 @@ Node.js 24 or later (Claude Desktop installs it from the `.mcpb`). 20 tools — 
 ¹ Windows code paths and tests exist; a Windows CI run has not happened yet.
 
 <details>
-<summary><b>⚙️ Install for each client (pinned to 0.4.1)</b></summary>
+<summary><b>⚙️ Install for each client (pinned to 0.4.2)</b></summary>
 
 Replace `/path/to/project` with the folders the agent may use; they become `allowedDirectories` for that session.
 
@@ -43,18 +43,18 @@ Replace `/path/to/project` with the folders the agent may use; they become `allo
 
 ```bash
 # Claude Code, server only
-claude mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/project
+claude mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/project
 
 # OpenAI Codex CLI
-codex mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/project
+codex mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/project
 ```
 
 **VS Code** — `.vscode/mcp.json`:
 ```json
-{ "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.1", "${workspaceFolder}"] } } }
+{ "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "${workspaceFolder}"] } } }
 ```
 
-**Claude Desktop** — open `command-center-0.4.1.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders Command Center may use.
+**Claude Desktop** — open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders Command Center may use.
 </details>
 
 <details>
@@ -62,17 +62,17 @@ codex mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/proj
 
 Claude Code — commit `.mcp.json` at the project root:
 ```json
-{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.1", "."] } } }
+{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "."] } } }
 ```
 
 Codex — `~/.codex/config.toml`:
 ```toml
 [mcp_servers.command-center]
 command = "npx"
-args = ["-y", "@1xops/command-center@0.4.1", "/path/to/project"]
+args = ["-y", "@1xops/command-center@0.4.2", "/path/to/project"]
 ```
 
-Check where a build came from: `npm view @1xops/command-center@0.4.1 dist.attestations` (npm provenance from the CI release).
+Check where a build came from: `npm view @1xops/command-center@0.4.2 dist.attestations` (npm provenance from the CI release).
 </details>
 
 <details>
@@ -80,8 +80,8 @@ Check where a build came from: `npm view @1xops/command-center@0.4.1 dist.attest
 
 Non-root user; sees only the mounted folder. Build from a checkout of this repo:
 ```bash
-docker build -t command-center:0.4.1 mcp-server
-claude mcp add command-center -- docker run -i --rm --network none -v "/path/to/project:/workspace" command-center:0.4.1
+docker build -t command-center:0.4.2 mcp-server
+claude mcp add command-center -- docker run -i --rm --network none -v "/path/to/project:/workspace" command-center:0.4.2
 ```
 `--network none` cuts network access for untrusted work; drop it if sessions need the network.
 </details>

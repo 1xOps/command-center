@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "command-center",
   "display_name": "1xOps Command Center",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Persistent terminal sessions, processes and text-file tools, limited to the folders you choose.",
   "long_description": "Command Center lets Claude run commands in sessions that stay open (tests, builds, logs, REPLs, SSH) and read, search and edit text files, only inside the folders you pick when installing. Common dangerous commands (sudo, disk and system tools) are refused. Nothing is sent anywhere: no telemetry, no remote service.",
   "author": {

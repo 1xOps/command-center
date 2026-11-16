@@ -31,10 +31,10 @@ Replace `/path/to/project` with the folders the agent may use; they become `allo
 /plugin install command-center@command-center
 
 # Claude Code: server only
-claude mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/project
+claude mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/project
 
 # OpenAI Codex CLI
-codex mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/project
+codex mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/project
 ```
 
 <details>
@@ -42,21 +42,21 @@ codex mcp add command-center -- npx -y @1xops/command-center@0.4.1 /path/to/proj
 
 **VS Code** — `.vscode/mcp.json`:
 ```json
-{ "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.1", "${workspaceFolder}"] } } }
+{ "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "${workspaceFolder}"] } } }
 ```
 
-**Claude Desktop (macOS, Windows)** — open `command-center-0.4.1.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders to allow.
+**Claude Desktop (macOS, Windows)** — open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders to allow.
 
 **Team setup** — commit `.mcp.json` (Codex: same args under `[mcp_servers.command-center]` in `~/.codex/config.toml`):
 ```json
-{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.1", "."] } } }
+{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "."] } } }
 ```
-Provenance of a build: `npm view @1xops/command-center@0.4.1 dist.attestations`.
+Provenance of a build: `npm view @1xops/command-center@0.4.2 dist.attestations`.
 
 **Container** — from a repo checkout; sees only the mounted folder:
 ```bash
-docker build -t command-center:0.4.1 mcp-server
-claude mcp add command-center -- docker run -i --rm --network none -v "/path/to/project:/workspace" command-center:0.4.1
+docker build -t command-center:0.4.2 mcp-server
+claude mcp add command-center -- docker run -i --rm --network none -v "/path/to/project:/workspace" command-center:0.4.2
 ```
 </details>
 

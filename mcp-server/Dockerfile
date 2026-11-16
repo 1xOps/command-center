@@ -3,8 +3,8 @@
 # Refresh the digest when a scan flags the base. Node 24 and ripgrep come from Wolfi's own
 # packages. The server runs as a non-root user with production dependencies only.
 #
-#   docker build -t command-center:0.4.1 mcp-server
-#   docker run -i --rm -v "$PWD:/workspace" command-center:0.4.1
+#   docker build -t command-center:0.4.2 mcp-server
+#   docker run -i --rm -v "$PWD:/workspace" command-center:0.4.2
 ARG WOLFI_BASE=cgr.dev/chainguard/wolfi-base:latest@sha256:833c48f1faf32c90e6f9501a2410a9aa28ceb2c594102edd4470053c30efa089
 
 FROM ${WOLFI_BASE} AS build
