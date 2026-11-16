@@ -1,145 +1,50 @@
-<p align="center"><img src="mcp-server/logo.png" width="120" alt="1xOps Command Center"></p>
-
 # 1xOps Command Center
 
-**Your AI agent keeps a terminal open — tests, logs, REPLs and SSH — inside the folders you allow.**
+**Before your AI starts a job, know that every connector is signed in to the right account, with the right access.**
 
-A local MCP server: shell sessions that stay open between turns, plus text-file tools, under one folder limit and one command blocklist that only a person can change. It runs on your machine with your permissions and sends nothing anywhere.
+Claude Code shows a connector as "✔ Connected" when its server starts. That doesn't mean its credentials work, or that it uses the account the job needs. On one Mac on 2026-11-16, `claude mcp list` showed three AWS connectors as "✔ Connected" while none of them had working AWS credentials ([evidence](docs/evidence/darwin-2026-11-16.json)). Command Center asks each vendor's own CLI who the connector is signed in as, and tells you before work starts.
 
-**Claude Desktop (macOS, Windows):** open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases) and pick the folders it may use.
+## Who uses it, and how
 
-**Claude Code** (the plugin passes no folder; set the limit as in [Install for each client](#-clients-and-platforms)):
-```
-/plugin marketplace add 1xOps/command-center
-/plugin install command-center@command-center
-```
-
-## 💼 What teams use it for
-
-| Scenario | How it works | Why it helps |
+| You are | You run | You get |
 |---|---|---|
-| 🧪 **Fix a failing test suite** | Run the tests, read the failures, edit, run again — in the same shell | The environment stays set up; the engineer reviews one diff |
-| 🚨 **Watch logs during an incident** | Start a tail, read new output on demand, stop it with `force_terminate` | A second pair of eyes on live output; nothing left running afterwards |
-| 📊 **Check data in a REPL** | `python3 -i` or `node -i` keeps the data loaded across turns | Answers come from the data, not from a script re-run each time |
-| 🔐 **Diagnose a server over SSH** | One `ssh` session kept open across turns | Faster remote triage. The blocklist checks the remote command and each typed line; the remote account's permissions are still the real limit |
-| 🏢 **One approved setup for the team** | Commit a pinned `.mcp.json` | Every seat runs the same reviewed version |
+| Cloud & infrastructure engineer, SRE, developer | `npx @1xops/command-center check` (once 1.0.0 is published; until then `node cli/bin/command-center.mjs check`) | One line per connector: account, profile, access (read or write), expiry, and OK, WARN or FAIL with the reason |
+| Anyone using Claude Code | the SessionStart hook below | Claude starts every session already knowing which connectors are broken, and tells you instead of failing halfway through a job |
+| A team that needs read-only work | a `.command-center.json` in the project | A FAIL on the wrong AWS account, and a WARN when a token can write but the job only reads |
 
-<details>
-<summary><b>🤔 Already have Claude Code or Codex? Do you still need this?</b></summary>
+```json
+// ~/.claude/settings.json: every Claude Code session starts with the check
+{ "hooks": { "SessionStart": [ { "hooks": [ { "type": "command", "command": "npx -y @1xops/command-center@1 check --brief || true" } ] } ] } }
+```
 
-**You probably don't** if you work in your own repository with Codex, or with Claude Code and no need for sessions that stay open between turns. **You do** if one of these rows is yours:
+```json
+// .command-center.json: what this project's jobs need (${VAR} reads the environment)
+{ "aws": { "account": "${AWS_ACCOUNT_ID}", "access": "read" }, "github": { "access": "read" } }
+```
 
-| You need | Why it matters | With Command Center | Without it |
+Exit code: `0` all OK, `1` a warning, `2` a failure. Add `--json` for scripts.
+
+## What it checks today
+
+| Connector | Found in | Identity call (read-only) | Reports |
 |---|---|---|---|
-| 🖥️ **Shell and file tools in Claude Desktop chat** | Not everyone on the team works in a terminal | One installer file; the person picks the allowed folders | Use the app's Code tab (Claude Code) or Cowork, which work in folders the person picks, under their own settings |
-| 📏 **One rule set across AI tools** | Security reviews one policy, not one per tool | The same folder limit and command blocklist for this server in Claude Desktop, Claude Code, Codex and VS Code; its file and settings tools cannot loosen them, but the commands it runs are not sandboxed | Each tool has its own permission settings to set and review (Claude Code managed settings, Codex requirements, VS Code approvals) |
-| 🔁 **Sessions that stay open** | SSH triage, REPLs and log tails need state between turns | Sessions stay open and the agent types into them; lines typed into a shell or SSH session are checked against the blocklist (REPL input is not). Plain pipes: no password prompts or full-screen programs | Codex and VS Code can type into a running terminal; Claude Code runs each command in its own process |
-| 🧾 **A supply chain you can audit** | Every tool on a seat needs an owner and a trail | Signed dependency register, npm provenance, owner approval before each release, no telemetry | Any other server you add needs the same review: provenance, a dependency list, an owner |
+| AWS (awslabs servers, `mcp-proxy-for-aws`, any server with `AWS_PROFILE`) | Claude Code user, folder and plugin config; Codex `config.toml` | `aws sts get-caller-identity` (needs no permission); `aws configure export-credentials`, from which only the expiry is kept | account (last 4 digits), role, access read/write/unknown, expiry; an unset `${VAR}` or plugin setting is named |
+| GitHub (`api.githubcopilot.com/mcp`, `github-mcp-server`) | same | `gh auth status --json hosts` | login, scopes, access read/write |
+| Anything else | same | none yet | listed as `—`, never as OK |
 
-**Footprint:** 2 direct runtime dependencies (MCP SDK, zod; every package they pull in is in the dependency register), 1,562 lines of server code, nothing to host, and a release is one tag plus one owner approval.
-</details>
+Access is judged from the AWS role or permission-set name (ReadOnly, ViewOnly, SecurityAudit = read; Admin, PowerUser, FullAccess = write). Any other name is `unknown`, and `unknown` is never OK for a read-only job. Command Center never prints or stores a token, and shows only the last 4 digits of an account.
 
-## 🧩 Clients and platforms
+**Not a security control.** It checks and reports. Enforcement stays with your credentials (use read-only roles) and with each app's own settings.
 
-| Client | Install | macOS | Linux | Windows |
-|---|---|:-:|:-:|:-:|
-| Claude Desktop | `.mcpb` from [Releases](https://github.com/1xOps/command-center/releases) | ✓ | | ✓ ¹ |
-| Claude Code — plugin (server + 6 skills) | `/plugin install` above | ✓ | ✓ | ✓ ¹ |
-| Claude Code — server only | `claude mcp add` | ✓ | ✓ | ✓ ¹ |
-| OpenAI Codex CLI | `codex mcp add` | ✓ | ✓ | ✓ ¹ |
-| VS Code (agent mode) | `.vscode/mcp.json` | ✓ | ✓ | ✓ ¹ |
+## Develop
 
-Node.js 24 or later (Claude Desktop installs it from the `.mcpb`). 20 tools — see [`mcp-server/README.md`](mcp-server/README.md#-tools-20).
-¹ Windows: 73 of 74 tests pass on GitHub-hosted Windows, 0 fail, 1 POSIX-only ssh test skipped ([run 43794268200](https://github.com/1xOps/command-center/actions/runs/43794268200), 2026-11-16). Timed client installs on Windows are not yet measured.
+Node 24, no dependencies.
+- `task check` runs the tests (18, covering the six setups: missing profile, expired sign-in, wrong account, write scopes on a read-only job, revoked token, healthy).
+- `task connectors` checks this machine.
+- `task evidence` writes the side-by-side JSON.
 
-<details>
-<summary><b>⚙️ Install for each client (pinned to 0.4.2)</b></summary>
+## Earlier versions
 
-**Claude Desktop** — open `command-center-0.4.2.mcpb` from [Releases](https://github.com/1xOps/command-center/releases); it asks which folders Command Center may use.
+0.4.x was an MCP server with terminal and file tools. Claude Code and Codex already ship those tools, so it was removed. Its source is at the tag `command-center-v0.4.2`.
 
-For the other clients, replace `/path/to/project` with the folders the agent may use; they become `allowedDirectories` for that session.
-
-> **The plugin passes no folder.** With no folder and an empty `allowedDirectories` there is **no folder limit**. Set `allowedDirectories` in `~/.command-center/config.json`, or use a server-only install with a folder.
-
-```bash
-# Claude Code, server only
-claude mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/project
-
-# OpenAI Codex CLI
-codex mcp add command-center -- npx -y @1xops/command-center@0.4.2 /path/to/project
-```
-
-**VS Code** — `.vscode/mcp.json`:
-```json
-{ "servers": { "command-center": { "type": "stdio", "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "${workspaceFolder}"] } } }
-```
-</details>
-
-<details>
-<summary><b>🏢 Enterprise install (one pinned, verified setup for every seat)</b></summary>
-
-**1. Check where the version came from.** Every release is built and published by GitHub Actions with npm provenance.
-```bash
-npm view @1xops/command-center@0.4.2 dist.attestations   # provenance.predicateType: https://slsa.dev/provenance/v1
-npm audit signatures                                       # after installing: "verified attestations"
-```
-
-**2. Pin it for every seat.** Never use `@latest`. Claude Code: commit [`templates/.mcp.json`](templates/.mcp.json) at the project root. The `.` limits the agent to that project.
-```json
-{ "mcpServers": { "command-center": { "command": "npx", "args": ["-y", "@1xops/command-center@0.4.2", "."] } } }
-```
-Codex: add this to `~/.codex/config.toml`:
-```toml
-[mcp_servers.command-center]
-command = "npx"
-args = ["-y", "@1xops/command-center@0.4.2", "/path/to/project"]
-```
-
-**3. Set the folder limit for plugin installs.** The plugin passes no folder, so give each seat [`templates/config.json`](templates/config.json) at `~/.command-center/config.json` (Windows: `%USERPROFILE%\.command-center\config.json`; `COMMAND_CENTER_CONFIG_DIR` moves it). Set `allowedDirectories` to the approved folders.
-- If you leave `blockedCommands` out, the built-in list applies. If you list it, your list replaces the built-in one. The first `set_config_value` call writes the current built-in list into the file, and from then on that copy applies. To pick up a newer release's list, delete `blockedCommands` from the file.
-- Folders passed at launch (step 2) take precedence over the file.
-
-**4. Check a seat.** `npx -y @1xops/command-center@0.4.2 --version` prints `0.4.2`. Ask the agent to read a file outside the approved folders. It is refused with a message that names the setting:
-```text
-refused: /etc/hostname is outside allowedDirectories (/work/project). allowedDirectories is set in /root/.command-center/config.json; only a person can change it.
-```
-The agent cannot widen its own access: `set_config_value` refuses `allowedDirectories`.
-</details>
-
-<details>
-<summary><b>📦 Container (a real boundary for the host)</b></summary>
-
-Non-root user; sees only the mounted folder. Build from a checkout of this repo:
-```bash
-docker build -t command-center:0.4.2 mcp-server
-claude mcp add command-center -- docker run -i --rm --network none -v "/path/to/project:/workspace" command-center:0.4.2
-```
-`--network none` cuts network access for untrusted work; drop it if sessions need the network.
-</details>
-
-<details>
-<summary><b>🛡️ Security model</b></summary>
-
-Command Center runs commands with **your** permissions and trusts the AI client driving it. It does not detect prompt injection.
-
-| Control | What it does | Security boundary? |
-|---|---|---|
-| `allowedDirectories` | Every file tool and session working folder must be inside these folders (symlinks resolved first). Empty = no limit | No |
-| `blockedCommands` | Refuses listed programs wherever they start a command, incl. after `;` `&&` `\|` `$(…)`, `sh -c`, `env`/`timeout` wrappers; always refuses `eval` / `Invoke-Expression`. Defaults include `sudo`, `dd`, `mount`, `diskpart`, `reg` | No |
-| Person-only settings | `set_config_value` refuses `allowedDirectories`, `blockedCommands`, `defaultShell`; file tools refuse the config folder | No |
-| Container | Non-root, only the mounted folder visible | **Yes**, for the host filesystem |
-
-**Limits:** a program started in a session can reach any path and network you can, and could edit the config file (it applies at the next start). The command check reads command lines (including lines typed into a shell or `ssh` session), not scripts or REPL input. Each session keeps its last 1 MiB of output in memory.
-
-**Privacy:** no telemetry, analytics, update checks or remote calls. See [SECURITY.md](mcp-server/SECURITY.md) · [PRIVACY.md](mcp-server/PRIVACY.md).
-</details>
-
-## 📁 In this repository
-
-| Folder | What it is |
-|---|---|
-| [`mcp-server/`](mcp-server/README.md) | npm package `@1xops/command-center`: server, tests, Claude Desktop bundle, container |
-| [`plugins/command-center/`](plugins/command-center/README.md) | Claude Code plugin: the pinned server plus six skills |
-| [`docs/supply-chain/register.md`](docs/supply-chain/register.md) | Every shipped package and its licence, signed by the owner |
-
-MCP Registry `io.github.1xOps/command-center` · Apache-2.0 © 2026 1xOps · Report vulnerabilities privately: [SECURITY.md](mcp-server/SECURITY.md)
+Apache-2.0 · 1xOps

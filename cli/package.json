@@ -1,0 +1,17 @@
+{
+  "name": "@1xops/command-center",
+  "version": "1.0.0",
+  "description": "Before an AI app starts a job, prove each MCP connector is signed in to the right account with the right access (Claude Code, Codex)",
+  "license": "Apache-2.0",
+  "author": "1xOps (https://github.com/1xOps)",
+  "homepage": "https://github.com/1xOps/command-center#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/1xOps/command-center.git", "directory": "cli" },
+  "bugs": "https://github.com/1xOps/command-center/issues",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "bin": { "command-center": "bin/command-center.mjs" },
+  "files": ["bin", "src", "LICENSE"],
+  "scripts": { "test": "node --test --test-reporter=spec" },
+  "publishConfig": { "access": "public", "provenance": true },
+  "keywords": ["mcp", "claude", "codex", "aws", "github", "connectors", "identity"]
+}

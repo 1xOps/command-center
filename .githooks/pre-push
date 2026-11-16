@@ -4,7 +4,7 @@
 # Turned on per clone by `git config core.hooksPath .githooks`. `bash .githooks/pre-push --self-test` proves it.
 set -uo pipefail
 unset GIT_DIR GIT_WORK_TREE
-fast=${GIT_STANDARD_FAST:-'cd mcp-server && npm test --silent'}
+fast=${GIT_STANDARD_FAST:-'cd cli && npm test --silent'}
 
 run() { # runs the fast checks from the work tree root; prints advice on failure; always returns 0
   local out rc

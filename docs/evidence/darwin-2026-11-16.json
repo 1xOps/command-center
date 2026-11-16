@@ -1,0 +1,320 @@
+{
+  "at": "2026-11-16T20:29:34.960Z",
+  "commit": "ffab8e6",
+  "os": "darwin",
+  "folder": "command-center",
+  "native": {
+    "command": "claude mcp list",
+    "exitCode": 0,
+    "lines": [
+      "plugin:cloudops-finops:awslabs-network: uvx awslabs.aws-network-mcp-server==0.0.17 - ✔ Connected",
+      "plugin:cloudops-finops:awslabs-billing-cost-management: uvx awslabs.billing-cost-management-mcp-server==0.0.37 - ✔ Connected",
+      "plugin:cloudops-finops:awslabs-cloudwatch: uvx awslabs.cloudwatch-mcp-server==0.2.1 - ✔ Connected",
+      "plugin:terraform-aws:terraform: sh ~/.claude/plugins/cache/terraform-aws/terraform-aws/0.2.1/scripts/mcp-terraform.sh - ✔ Connected",
+      "plugin:terraform-aws:aws: uvx --from mcp-proxy-for-aws-cli==1.7.0 mcp-proxy-for-aws https://aws-mcp.us-east-1.api.aws/mcp --region us-east-1 --read-only --disable-telemetry - ✘ Failed to connect — -32602: Invalid request parameters",
+      "aws-mcp: uvx mcp-proxy-for-aws@1.6.6 https://aws-mcp.us-east-1.api.aws/mcp --profile ${AWS_OPERATIONS_PROFILE} --metadata AWS_REGION=${AWS_REGION} - ⏸ Pending approval (run `claude` to approve)",
+      "awslabs-billing-cost-management: uvx awslabs.billing-cost-management-mcp-server==0.0.37 - ⏸ Pending approval (run `claude` to approve)",
+      "awslabs-cloudtrail: uvx awslabs.cloudtrail-mcp-server==0.1.1 - ⏸ Pending approval (run `claude` to approve)",
+      "awslabs-cloudwatch: uvx awslabs.cloudwatch-mcp-server==0.2.1 - ⏸ Pending approval (run `claude` to approve)",
+      "awslabs-ecs: uvx --with fastmcp<4 --from awslabs.ecs-mcp-server==0.1.35 ecs-mcp-server - ⏸ Pending approval (run `claude` to approve)",
+      "awslabs-iam: uvx awslabs.iam-mcp-server==1.1.1 - ⏸ Pending approval (run `claude` to approve)",
+      "awslabs-network: uvx awslabs.aws-network-mcp-server==0.0.17 - ⏸ Pending approval (run `claude` to approve)",
+      " ├ [Warning] [aws-mcp] mcpServers.aws-mcp: Missing environment variables: AWS_OPERATIONS_PROFILE, AWS_REGION",
+      " ├ [Warning] [awslabs-billing-cost-management] mcpServers.awslabs-billing-cost-management: Missing environment variables: AWS_BILLING_PROFILE",
+      " ├ [Warning] [awslabs-cloudtrail] mcpServers.awslabs-cloudtrail: Missing environment variables: AWS_OPERATIONS_PROFILE, AWS_REGION",
+      " ├ [Warning] [awslabs-cloudwatch] mcpServers.awslabs-cloudwatch: Missing environment variables: AWS_OPERATIONS_PROFILE, AWS_REGION",
+      " ├ [Warning] [awslabs-ecs] mcpServers.awslabs-ecs: Missing environment variables: AWS_OPERATIONS_PROFILE, AWS_REGION",
+      " ├ [Warning] [awslabs-iam] mcpServers.awslabs-iam: Missing environment variables: AWS_OPERATIONS_PROFILE, AWS_REGION",
+      " ├ [Warning] [awslabs-network] mcpServers.awslabs-network: Missing environment variables: AWS_REGION"
+    ]
+  },
+  "commandCenter": {
+    "command": "command-center check --json",
+    "checkedAt": "2026-11-16T20:29:58.319Z",
+    "exitCode": 2,
+    "connectors": [
+      {
+        "name": "aws-mcp",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "AWS_OPERATIONS_PROFILE"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS_OPERATIONS_PROFILE not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-billing-cost-management",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "AWS_BILLING_PROFILE"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS_BILLING_PROFILE not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-cloudtrail",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "AWS_OPERATIONS_PROFILE"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS_OPERATIONS_PROFILE not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-cloudwatch",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "AWS_OPERATIONS_PROFILE"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS_OPERATIONS_PROFILE not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-ecs",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "AWS_OPERATIONS_PROFILE"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS_OPERATIONS_PROFILE not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-iam",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "AWS_OPERATIONS_PROFILE"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS_OPERATIONS_PROFILE not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-network",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "aws",
+        "profile": "__pass_profile_name__",
+        "unset": [],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS profile \"__pass_profile_name__\" not found"
+      },
+      {
+        "name": "azure",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "microsoft-fabric",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "microsoft-fabric-rti",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "playwright-automation",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "vizro-analytics",
+        "app": "Claude Code",
+        "source": ".mcp.json",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "vercel",
+        "app": "Claude Code",
+        "source": "plugin vercel@claude-plugins-official",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": "https://mcp.vercel.com",
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "awslabs-network",
+        "app": "Claude Code",
+        "source": "plugin cloudops-finops@cloudops",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "user_config.aws_profile_network"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "user_config.aws_profile_network not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-billing-cost-management",
+        "app": "Claude Code",
+        "source": "plugin cloudops-finops@cloudops",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "user_config.aws_profile_billing"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "user_config.aws_profile_billing not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "awslabs-cloudwatch",
+        "app": "Claude Code",
+        "source": "plugin cloudops-finops@cloudops",
+        "vendor": "aws",
+        "profile": "(default credentials)",
+        "unset": [
+          "user_config.aws_profile_operations"
+        ],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "user_config.aws_profile_operations not set, so the default credentials are used: no AWS credentials"
+      },
+      {
+        "name": "azure",
+        "app": "Claude Code",
+        "source": "plugin cloudops-finops@cloudops",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "terraform",
+        "app": "Claude Code",
+        "source": "plugin terraform-aws@terraform-aws",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      },
+      {
+        "name": "aws",
+        "app": "Claude Code",
+        "source": "plugin terraform-aws@terraform-aws",
+        "vendor": "aws",
+        "profile": "default",
+        "unset": [],
+        "url": null,
+        "identity": null,
+        "account": null,
+        "access": null,
+        "expires": null,
+        "status": "fail",
+        "reason": "AWS profile \"default\" not found"
+      },
+      {
+        "name": "node_repl",
+        "app": "Codex",
+        "source": "~/.codex/config.toml",
+        "vendor": "other",
+        "profile": null,
+        "unset": [],
+        "url": null,
+        "status": "skip",
+        "reason": "identity check not available for this connector yet"
+      }
+    ]
+  }
+}
