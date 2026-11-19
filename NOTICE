@@ -1,0 +1,70 @@
+1xops
+Copyright 2026 Nhat-Thanh Nguyen (nnthanh101@gmail.com), OceanSoft.io
+
+Licensed under the Apache License, Version 2.0 (see LICENSE). This NOTICE and that
+LICENSE cover the whole repository: the plugin (plugins/1xops), the command line
+(packages/python, PyPI "1xops"), the native Node.js command line (packages/npm, npm "1xops") and the
+container image (ghcr.io and Docker Hub "nnthanh101/1xops").
+
+"1xops" and "OceanSoft" are trademarks of OceanSoft.io. The Apache License does not
+grant permission to use these names, logos or trademarks, except as required to
+describe the origin of the work (Apache-2.0, section 6).
+
+Third-party components
+----------------------
+Not copied into this repository or its packages unless stated. Each keeps its own
+licence. Every component below was approved by the maintainer on 2026-11-17; any new
+third-party component needs the maintainer's approval first.
+
+Upstream (git submodule, upstream/knowledge-work-plugins; plugins/operations links to it)
+  knowledge-work-plugins   https://github.com/anthropics/knowledge-work-plugins   Apache-2.0
+
+Runtime dependencies of the command line (installed from PyPI, not bundled)
+  rich 15.0.0              https://github.com/Textualize/rich                     MIT
+
+Build, test and run tools (not distributed)
+  uv 0.13.8                https://github.com/astral-sh/uv                        MIT OR Apache-2.0
+  hatchling 1.33.0         https://github.com/pypa/hatch                          MIT
+  pytest 9.2.0             https://github.com/pytest-dev/pytest                   MIT
+  ruff 0.17.5              https://github.com/astral-sh/ruff                      MIT
+  act                      https://github.com/nektos/act                          MIT (local runs only)
+
+Connector servers named in the built-in profiles (fetched by the user at run time)
+  awslabs.billing-cost-management-mcp-server 0.0.45   https://github.com/awslabs/mcp   Apache-2.0
+  awslabs.cloudtrail-mcp-server 0.1.1                 https://github.com/awslabs/mcp   Apache-2.0
+  awslabs.cloudwatch-mcp-server 0.3.1                 https://github.com/awslabs/mcp   Apache-2.0
+  awslabs.well-architected-security-mcp-server 0.2.1  https://github.com/awslabs/mcp   Apache-2.0
+  @azure/mcp 3.0.0                                    https://github.com/microsoft/mcp MIT
+  Atlassian remote server  https://mcp.atlassian.com/v2/mcp   hosted service, Atlassian's terms
+
+Container base image: nnthanh101/runbooks:prod (Wolfi), pinned by digest; built with uv from the Wolfi base; each package in it keeps
+its own licence.
+
+Derived code (copied once; no upstream link is kept or tracked)
+  Desktop Commander MCP    https://github.com/wonderwhy-er/DesktopCommanderMCP    MIT
+    Approved by the maintainer on 2026-11-18. Used in npm "@1xops/command-center" 0.1.0 to
+    0.4.2 (derived from version 0.3.3; retired). The 1xops enterprise desktop server is written
+    from scratch and contains no code from it.
+    Its copyright notice and licence, which must accompany every copy:
+
+    MIT License
+
+    Copyright (c) 2024-2025 Eduard Ruzga and Desktop Commander Contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.

@@ -36,4 +36,8 @@ if [ "${1:-}" = --self-test ]; then
   [ -z "$o" ] && ok=$((ok + 1)) || echo "  [FAIL] a push to develop was not silent"
   echo "pre-push self-test: $ok/5 cases as expected"; [ "$ok" = 5 ]; exit $?
 fi
+
+# Advice for everyone, never a blocker: the owner decides. Switch it off for this clone with
+# `git config git-standard.advice off`; back on with `git config --unset git-standard.advice`.
+[ "$(git config --get git-standard.advice 2>/dev/null)" = off ] && exit 0
 main_advice; run; exit 0

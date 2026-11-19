@@ -10,8 +10,8 @@
   "type": "module",
   "engines": { "node": ">=24" },
   "bin": { "command-center": "bin/command-center.mjs" },
-  "files": ["bin", "src", "LICENSE"],
-  "scripts": { "test": "node --test --test-reporter=spec" },
+  "files": ["bin", "src", "LICENSE", "NOTICE"],
+  "scripts": { "test": "node --test --test-reporter=spec", "prepack": "cp ../NOTICE ." },
   "publishConfig": { "access": "public", "provenance": true },
   "keywords": ["mcp", "claude", "codex", "aws", "github", "connectors", "identity"]
 }
